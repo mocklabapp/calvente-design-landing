@@ -1,0 +1,15 @@
+/* Neutral technical defaults, not a client-approved brand palette.
+   Resolve the client's visual identity before changing these shared tokens. */
+@theme static {
+  --color-*: initial;
+
+  --color-canvas: #fff;
+  --color-ink: #000;
+  --color-surface: var(--color-canvas);
+  --color-muted: color-mix(in oklab, var(--color-ink) 65%, var(--color-canvas));
+  --color-line: color-mix(in oklab, var(--color-ink) 15%, var(--color-canvas));
+  --color-brand: var(--color-ink);
+  --color-on-brand: var(--color-canvas);
+
+  --font-sans: system-ui, sans-serif;
+}

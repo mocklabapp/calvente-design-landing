@@ -1,0 +1,19 @@
+---
+import { equivalents, locales, type PublishedPage } from '@/i18n/pages';
+import { ui } from '@/i18n/ui';
+interface Props { page: PublishedPage }
+const { page } = Astro.props;
+const links = equivalents(page);
+const labels = ui[page.locale];
+---
+{links.length > 1 && (
+  <nav aria-label={labels.navigation}>
+    <span>{labels.languageSwitcher}</span>
+    <ul>
+      {links.map(({ locale, path }) => (
+        <li><a href={path} lang={locales[locale].lang} hreflang={locales[locale].lang}
+          aria-current={locale === page.locale ? 'page' : undefined}>{locales[locale].label}</a></li>
+      ))}
+    </ul>
+  </nav>
+)}

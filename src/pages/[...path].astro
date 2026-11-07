@@ -1,0 +1,14 @@
+---
+import PageRenderer from './index.astro';
+import { publishedPages, type PublishedPage } from '@/i18n/pages';
+
+export function getStaticPaths() {
+  // index.astro owns /; every other enabled, complete translation is generated here.
+  return publishedPages().filter(({ path }) => path !== '/').map((page) => ({
+    params: { path: page.path.slice(1, -1) },
+    props: { page },
+  }));
+}
+interface Props { page: PublishedPage }
+---
+<PageRenderer page={Astro.props.page} />

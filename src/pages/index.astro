@@ -1,0 +1,19 @@
+---
+import { site } from '@/config/site';
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import LanguageSwitcher from '@/components/ui/LanguageSwitcher.astro';
+import { publishedPages, type PublishedPage } from '@/i18n/pages';
+
+interface Props { page?: PublishedPage }
+// This root route also serves as the shared renderer for the rest route.
+const { page = publishedPages().find(({ path }) => path === '/')! } = Astro.props;
+const { content } = page;
+---
+<BaseLayout page={page} title={content.title === site.name ? undefined : content.title}
+  description={content.description}>
+  <main>
+    <h1>{content.title}</h1>
+    <p>{content.body}</p>
+    <LanguageSwitcher page={page} />
+  </main>
+</BaseLayout>
