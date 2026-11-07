@@ -66,6 +66,11 @@ test('controlled test boundary', () => {
   delete env.SUPABASE_URL;
   delete env.SUPABASE_SECRET_KEY;
   delete env.GALIA_USER_ID;
+  delete env.GALIA_PROJECTS_URL;
+  delete env.MOCKLAB_USER_ID;
+  delete env.MOCKLAB_PROJECTS_URL;
+  delete env.SUPABASE_ANON_KEY;
+  delete env.PUBLIC_PROJECTS_ROLE_JWT;
   const result = spawnSync('corepack', ['pnpm', 'run', script], { cwd: root, env, encoding: 'utf8' });
   assert.ifError(result.error);
   assert.equal(await readFile(join(root, 'package.json'), 'utf8'), manifest);
@@ -83,7 +88,7 @@ export function environmentExampleIssue(source) {
     // Parser errors must never forward the human-owned input or its values.
     return 'invalid syntax';
   }
-  const expected = ['SUPABASE_URL', 'GALIA_USER_ID', 'SUPABASE_SECRET_KEY'];
+  const expected = ['MOCKLAB_PROJECTS_URL', 'MOCKLAB_USER_ID'];
   if (expected.some((name) => !Object.hasOwn(parsed, name))) return 'missing keys';
   if (Object.keys(parsed).some((name) => !expected.includes(name))) return 'extra keys';
   if (Object.values(parsed).some((value) => value !== '')) return 'nonempty values';

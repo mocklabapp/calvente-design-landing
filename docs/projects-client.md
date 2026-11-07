@@ -1,19 +1,19 @@
-# Standalone public projects client — T3a
+# Public projects client and Astro activation — T3a/T3b
 
-`fetchPublicProjects()` is a dormant, credential-free Edge client for R1 S1–S5. It is **not yet wired into `getProjects()`**: the existing Astro consumer and its configuration remain unchanged until T3b. This additive slice does not complete R1 or authorize deployment.
+`getProjects()` now delegates to the credential-free `fetchPublicProjects()` Edge client for R1 S1–S6. The server-only API and exported DTO are unchanged; only configuration and transport migrate. This local activation does not complete R1 or authorize deployment.
 
-## Activation interface for T3b
+## Site configuration
 
-Import `fetchPublicProjects` from `src/lib/projects-client.ts` in the existing server-only consumer. Pass trusted runtime configuration, never route/query parameters:
+The server wrapper reads both values through `getSecret` on every call, never from route/query parameters:
 
-| Proposed site variable | Required value after activation |
+| Site variable | Required value |
 | --- | --- |
-| `GALIA_PROJECTS_URL` | Exact `https://<20-character-project-ref>.supabase.co/functions/v1/public-projects` URL; no port, credentials, extra path, trailing slash, query or fragment. |
-| `GALIA_USER_ID` | One owner UUID, normalized to lowercase by the client. |
+| `MOCKLAB_PROJECTS_URL` | Exact `https://<20-character-project-ref>.supabase.co/functions/v1/public-projects` URL; no port, credentials, extra path, trailing slash, query or fragment. |
+| `MOCKLAB_USER_ID` | One owner UUID, normalized to lowercase by the client. |
 
 The interface is `fetchPublicProjects(endpoint: string | undefined, uid: string | undefined, dependencies?: ProjectsClientDependencies): Promise<PublicProject[]>`. Optional trusted test dependencies are `{ fetch: typeof fetch, timeout?: typeof AbortSignal.timeout }`; production defaults are native fetch and a ten-second deadline. The existing `PublicProject` interface is reused through a type-only import, without an Astro runtime dependency.
 
-No API key or Authorization header is sent and no environment variable is read by this client. T3b must replace the privileged consumer's configuration reads and migrate its fixtures/docs together. The human-owned environment template has not been read or changed in T3a; its eventual site configuration must contain blank `GALIA_PROJECTS_URL=` and `GALIA_USER_ID=` assignments, not a site database key.
+No API key or Authorization header is sent and no environment variable is read by the pure client; the wrapper alone reads configuration. There is no fallback to old site variable names or Supabase credentials. The human-owned template must contain blank `MOCKLAB_PROJECTS_URL=` and `MOCKLAB_USER_ID=` assignments only; agents do not read or edit its contents. The semantic test reports only safe mismatch classes. See [setup and migration](projects.md#configure-one-portfolio) for the operator-owned configuration change.
 
 ## Request and response guarantees
 
@@ -27,4 +27,6 @@ No API key or Authorization header is sent and no environment variable is read b
 
 `node --test tests/projects-client.test.mjs` exercises the exported client using fake fetch responses, with no credentials or live requests. Tests cover exact request/DTO contracts, all-state pass-through, partial translations, bigint limits/order, freshness, unsafe configuration, failures and deadlines. `corepack pnpm check` resolves the existing Astro types when standalone TypeScript cannot resolve `astro:env/server` through the type-only DTO import.
 
-These checks do not prove hosted grants, gateway behavior, deployment or the future Astro activation. T3b must retain server-only imports, fixed-owner selection and all three no-store headers on successful and failed HTTP/SSR responses. Parent-owned full validation and independent verification remain pending.
+`tests/projects.test.mjs` verifies the real wrapper/API with an isolated runtime environment bridge: only two configuration reads, fresh public requests, ignored visitor overrides and no secret fallback. HTTP/SSR fixtures now serve `{projects: DTO[]}` and retain all three no-store headers, locale selection and client-import rejection. Database owner selection and capped pagination remain covered by T1/T2a, not duplicated as site REST logic.
+
+These checks do not prove native Deno, hosted grants, gateway behavior or deployment. Operator rollout gates and parent-owned independent verification remain required; local T3b activation is not R1 closure.

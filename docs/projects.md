@@ -4,19 +4,27 @@ base-landing-mocklab provides a server-only `getProjects()` function and a dynam
 
 ## Configure one portfolio
 
-1. Only for live projects, copy the canonical blank [`.env.example`](../.env.example) to `.env` in the project root yourself (`cp .env.example .env`). Fill the URL, owner UUID and private key locally; do not paste credentials into chat or source code. Keep the reusable example empty. All three values are server-only; comments in a file do not enforce that boundary.
+1. Only for live projects, copy the canonical blank [`.env.example`](../.env.example) to `.env` in the project root yourself (`cp .env.example .env`). Fill the shared public Edge URL and owner UUID locally. Keep the reusable example empty; the site needs no API key or database credential. Both values are read through the server-only environment boundary.
 2. Follow the [README quick start](../README.md#quick-start): Node 24.x, available Corepack and pinned pnpm 12.16.1; explicitly run `corepack pnpm install --frozen-lockfile`, then `corepack pnpm dev`. Static pages, checks, builds and tests need no credentials. The projects endpoint fails closed until all values are valid.
 3. Before an authorized Vercel deployment, configure the same variables separately for each intended environment. Do not deploy merely to test configuration.
 
 | Variable | Local and Vercel treatment |
 | --- | --- |
-| `SUPABASE_URL` | Non-secret configuration, but server-only. Use the canonical HTTPS Supabase project URL, not a REST path, custom domain, query or fragment. |
-| `GALIA_USER_ID` | Non-secret configuration, but server-only. One owner UUID; never taken from browser/query input. |
-| `SUPABASE_SECRET_KEY` | Private Supabase secret key, not an anon/publishable key. Use Vercel Secret/Sensitive handling, not ordinary visible configuration text. |
+| `MOCKLAB_PROJECTS_URL` | Exact `https://<20-character-project-ref>.supabase.co/functions/v1/public-projects` URL; no port, credentials, trailing slash, extra path, query or fragment. No production default is supplied. |
+| `MOCKLAB_USER_ID` | One public owner UUID; never taken from browser/query input. |
 
-Vercel supports [Sensitive environment variables](https://vercel.com/docs/environment-variables/sensitive-environment-variables) for Production, Preview and Development. Configure the environments deliberately; do not expose a production database key to untrusted preview code. Sensitive storage reduces disclosure through configuration access; it does not make malicious application code safe. Never prefix credentials with `PUBLIC_`, commit `.env`, log keys or serialize them into HTML, props or browser bundles. Existing `.gitignore` rules exclude local `.env` files.
+The human-owned blank template must contain exactly these assignments (comments and legal whitespace are allowed):
 
-A server-side environment key is viable only with trusted code, restricted project access and careful output handling. This key bypasses RLS and has broad database privileges under current grants. The owner filter and returned-field allowlist are application safeguards, not database-enforced least privilege. A dedicated read-only, tenant-scoped export/RPC or service is a later improvement requiring separate database authorization. No database changes are part of this integration.
+```dotenv
+MOCKLAB_PROJECTS_URL=
+MOCKLAB_USER_ID=
+```
+
+The `MOCKLAB_` prefix names site configuration only; it does not rename Vercel project `galia` or Supabase target `galia_dev` / `mygqfdbloqojffhsurgo`. Old site variable names are not accepted as a fallback.
+
+Migration from direct database access requires an operator to remove obsolete site `SUPABASE_URL`/`SUPABASE_SECRET_KEY` configuration; there is no fallback. Do not give sites `SUPABASE_ANON_KEY` or `PUBLIC_PROJECTS_ROLE_JWT` either. The shared Edge service alone owns restricted database access and pagination. Never commit local `.env` files or put credentials in source, HTML, props or browser bundles.
+
+UID is a public selector, **not authorization**: callers of the shared service can select any owner's public output. The site fixes one configured owner for presentation, not private tenant isolation. The [Edge contract](public-projects-edge.md) and [operator gates](public-projects-access.md) govern target verification, restricted export/role provisioning, effective grants, gateway/CORS and rollout. Local implementation does not deploy the function, revoke existing broad management-app access or establish global database hardening. Native Deno and hosted Supabase/Vercel proof remain operator gates.
 
 ## Consume in native Astro frontmatter
 
@@ -73,11 +81,11 @@ The **route** must export `prerender = false`; importing the function inside a c
 
 Local copy lives in typed `src/data/pages.ts`, not JSON; no migration is needed. The URL lookup above supplies **one `page.locale`** for local body, UI, metadata and project selection. `LanguageSwitcher` uses ordinary equivalent-page anchors: following one loads a complete new document and fetches current projects again. No SPA router, language persistence, automatic translation or open-tab refresh is added.
 
-`selectProjectContent(project, language)` is pure and imports only the `PublicProject` type, never privileged runtime code. It returns `{ language, source, title, description }`: exact original matches win, otherwise an exact translation is selected; absence returns `source: 'missing'` with both fields null. Unknown original language is not Spanish. Partial selected fields stay null; there is no per-field fallback, trimming or synthesis. Arbitrary exact keys are supported, but this does **not** extend the database validator or publish site locales.
+`selectProjectContent(project, language)` is pure and imports only the `PublicProject` type, never server-only runtime code. It returns `{ language, source, title, description }`: exact original matches win, otherwise an exact translation is selected; absence returns `source: 'missing'` with both fields null. Unknown original language is not Spanish. Partial selected fields stay null; there is no per-field fallback, trimming or synthesis. Arbitrary exact keys are supported, but this does **not** extend the database validator or publish site locales.
 
 The example explicitly renders no text for `missing`, leaving an empty article marker; it does not discard the DTO. Choose the client's approved absence/partial/error presentation in their copy. The fixed sanitized 503 message is a technical example, not approved translated client UI. Do not fill missing fields from originals or leak error details. An unavailable localized page returns 404 rather than another language's content. Existing routes that do not use live projects remain static.
 
-Import `getProjects()` only in server frontmatter or server modules. Never import it in an Astro `<script>` or other browser module: its `astro:env/server` dependency causes Astro to reject client builds. The pure `selectProjectContent()` helper does not import that privileged runtime. A React-style client hook is unnecessary in this native-component stack.
+Import `getProjects()` only in server frontmatter or server modules. Never import it in an Astro `<script>` or other browser module: its `astro:env/server` dependency causes Astro to reject client builds. The pure `selectProjectContent()` helper does not import that server-only runtime. A React-style client hook is unnecessary in this native-component stack.
 
 ## Consume from the browser
 
@@ -92,7 +100,7 @@ async function loadProjects() {
 }
 ```
 
-Success is `200` with `{ "projects": [...] }`; an empty portfolio returns an empty array. Missing/invalid configuration, upstream errors, timeout or invalid data return `503` with `{ "error": "Projects unavailable" }`. All endpoint responses set `Cache-Control`, `CDN-Cache-Control` and `Vercel-CDN-Cache-Control` to `no-store`. Query parameters cannot change the owner, URL or key. The endpoint is intentionally public, not authenticated; every returned field must be approved for public distribution. Render text safely rather than injecting descriptions as raw HTML, and validate external URLs before making clickable links.
+Success is `200` with `{ "projects": [...] }`; an empty portfolio returns an empty array. Missing/invalid configuration, upstream errors, timeout or invalid data return `503` with `{ "error": "Projects unavailable" }`. All endpoint responses set `Cache-Control`, `CDN-Cache-Control` and `Vercel-CDN-Cache-Control` to `no-store`. Query parameters cannot change the owner or upstream URL; no key is used. The endpoint is intentionally public, not authenticated; every returned field must be approved for public distribution. Render text safely rather than injecting descriptions as raw HTML, and validate external URLs before making clickable links.
 
 ## Exact data contract
 
@@ -107,12 +115,12 @@ The return value of `getProjects()` is `PublicProject[]`; the endpoint wraps the
 
 This intentionally small initial allowlist supports text/link composition without promising all database columns. Images (`image_data`), keywords, map coordinates and other portfolio fields are not fetched or returned. Prompt, NAS folder, owner UUID and internal automation/assignment metadata are not public output. Extending the contract requires a separately reviewed allowlist, validation and tests.
 
-- All projects belonging to the one environment UUID are included, regardless of state. There is no draft/published filter. Never use a query parameter to select another tenant.
-- The verified relation is `projects -> project_translation_settings -> project_translations`, not a direct projects/translations join. Settings connect using `project_id`; translations use the settings' `project_id` and `original_language` relationship.
+- All projects belonging to the configured UUID are included, regardless of state. There is no draft/published filter. The site never accepts visitor owner overrides; the shared public Edge service accepts any valid owner selector.
+- The database export preserves `projects -> project_translation_settings -> project_translations`, not a direct projects/translations join. Settings connect using `project_id`; translations use the settings' `project_id` and `original_language` relationship.
 - Missing settings remain `originalLanguage: null` and `translations: []`; Spanish is not inferred. Settings without translations preserve the known original language and an empty array.
 - Partial translations remain partial: a null title or description stays null. No locale fallback, translation synthesis or automatic locale enabling occurs. Database content languages (`es`, `en`, `ca`) are independent of the site's enabled-page locale registry; the existing [i18n contract](i18n.md) still governs routes and UI.
 
-Each call reads runtime configuration, fetches with no-store and rejects redirects before credentials can follow a foreign host. Owner values and received data are checked before returning the allowlisted shape. Requests use ascending bigint IDs, pages of up to 200 and exact counts to avoid silently stopping at an upstream row cap. A shared ten-second abort signal bounds upstream fetching. Errors expose no raw upstream details. There is no cross-request data cache, ISR or persistent caching. Pagination is not a transactional snapshot across simultaneous database edits; very large portfolios can time out rather than return a knowingly truncated result.
+Each `getProjects()` call reads exactly `MOCKLAB_PROJECTS_URL` and `MOCKLAB_USER_ID` at runtime and delegates to the [public client](projects-client.md): one credential-free GET with `uid`, no-store, rejected redirects and a ten-second deadline. The client validates the complete `{projects: [...]}` response, including strictly increasing signed-bigint string IDs, and reconstructs the allowlist. Ownership selection and database pagination belong to Edge; the owner-free DTO cannot independently prove ownership at the site. Errors expose no upstream details. There is no cross-request data cache, ISR or persistent caching. Edge pagination is not a transactional snapshot across simultaneous database edits; failures never return a knowingly partial portfolio.
 
 Dashboard content changes appear on subsequent requests to the dynamic endpoint or an on-demand page without rebuilding. Already open browser components must fetch again to observe changes; no realtime subscription or polling is installed. Configuration/code changes still follow the normal deployment lifecycle.
 
@@ -122,7 +130,7 @@ The official `@astrojs/vercel` adapter supports Astro 7. Before an authorized de
 
 `corepack pnpm preview` is **not supported** by this adapter and exits with an explanatory error. Use `corepack pnpm dev` for local interactive work. The automated runtime test wraps the built Vercel handler in local HTTP with fake upstream responses; it is not a Vercel deployment emulator or proof of live platform behavior.
 
-`corepack pnpm run validate` checks types, builds without real configuration, and runs identity/styling, multilingual, data/security, dependency-compatibility and public-HTTP tests. Fixtures never call live Supabase. Coverage includes owner isolation, all-state inclusion, absent/partial translations, nested relation selection, pagination, sanitized failures, no-store, runtime changes without rebuilding and client-import rejection. Neither a passing build nor these tests prove live Supabase grants, Vercel configuration or visual approval.
+`corepack pnpm run validate` checks types, builds without real configuration, and runs identity/styling, multilingual, data/security, dependency-compatibility and public-HTTP tests. Fixtures never call live Supabase. Site coverage includes fixed-owner configuration, credential-free public GET, all-state pass-through, absent/partial translations, sanitized failures, no-store, runtime changes without rebuilding and client-import rejection. T1 SQL and T2a Edge tests retain owner selection, nested relation and capped-pagination coverage; these are no longer direct site REST responsibilities. Neither a passing build nor these tests prove live Supabase grants, Vercel configuration or visual approval.
 
 ### Dependency security limitation
 
@@ -141,6 +149,6 @@ Alongside the [kickoff guide](project-kickoff.md) and [working brief](project-br
 - [ ] The exact public portfolio owner UUID and approved public content, including every state.
 - [ ] Which current allowlisted fields and partial translations the page should present, without implicit language fallback.
 - [ ] Server-rendered versus browser-fetched composition, refresh behavior and failure presentation.
-- [ ] Environment ownership, trusted preview access and acknowledgement of the privileged-key/dependency risks.
+- [ ] Public URL/owner configuration ownership, shared-service rollout gates and acknowledgement of the unresolved dependency risk.
 
 Client design, additional data fields, authentication, database changes and deployment remain separate approvals. Return to the [README](../README.md) for starter setup.

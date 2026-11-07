@@ -35,7 +35,7 @@ The SQL signature is `(uuid, integer, integer) RETURNS jsonb`. All arguments are
 | `public_projects_runtime` | Separate NOLOGIN, NOINHERIT, NOBYPASSRLS role. Explicit EXECUTE only on this RPC, schema USAGE, no table grants or export-owner membership. |
 | `authenticator` | May SET ROLE to runtime, without inheriting it (PostgreSQL 16+ membership syntax). Existing management memberships/grants are untouched. |
 | Edge (proposed T2) | `SUPABASE_URL`, public infrastructure `SUPABASE_ANON_KEY` for `apikey`, and operator-provisioned secret `PUBLIC_PROJECTS_ROLE_JWT` for `Authorization: Bearer …` with runtime role claim. Never use a service-role key. |
-| Sites (proposed T3) | Only `GALIA_PROJECTS_URL` (shared public Edge endpoint) and `GALIA_USER_ID`. No role JWT or infrastructure key on sites. |
+| Sites (T3) | Only `MOCKLAB_PROJECTS_URL` (shared public Edge endpoint) and `MOCKLAB_USER_ID`. No old-name fallback, role JWT or infrastructure key on sites. |
 
 The migration is transactional and one-shot: name collisions fail, rather than adopting/replacing pre-existing objects. It refuses disabled RLS or existing PUBLIC table/column privileges on these three tables; it never repairs them by revoking management access. Permissive PUBLIC **policies** do not grant column access. PUBLIC/anon/authenticated EXECUTE is revoked on this RPC only.
 

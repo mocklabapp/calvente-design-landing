@@ -8,21 +8,23 @@ import test from 'node:test';
 import { localizedProjectFixture, projectResponse } from './helpers/localized-project-fixture.mjs';
 
 test('full-document locale requests share local/UI and fresh project language', async () => {
+  const names = ['MOCKLAB_PROJECTS_URL', 'MOCKLAB_USER_ID', 'GALIA_PROJECTS_URL', 'GALIA_USER_ID', 'SUPABASE_URL',
+    'SUPABASE_SECRET_KEY', 'SUPABASE_ANON_KEY', 'PUBLIC_PROJECTS_ROLE_JWT'];
+  for (const name of names) delete process.env[name];
   const result = await localizedProjectFixture();
   assert.equal(result.status, 0, result.output);
   let version = 1;
   let calls = 0;
   const nativeFetch = globalThis.fetch;
-  const names = ['SUPABASE_URL', 'SUPABASE_SECRET_KEY', 'GALIA_USER_ID'];
-  const previous = names.map((name) => process.env[name]);
   const server = createServer();
   try {
-    process.env.SUPABASE_URL = 'https://mygqfdbloqojffhsurgo.supabase.co';
-    process.env.SUPABASE_SECRET_KEY = 'fake-local-fixture-key';
-    process.env.GALIA_USER_ID = '12345678-1234-4234-8234-123456789abc';
+    process.env.MOCKLAB_PROJECTS_URL = 'https://abcdefghijklmnopqrst.supabase.co/functions/v1/public-projects';
+    process.env.MOCKLAB_USER_ID = '12345678-1234-4234-8234-123456789abc';
     globalThis.fetch = async (input, options) => {
       const url = new URL(input instanceof Request ? input.url : input);
-      assert.equal(url.hostname, 'mygqfdbloqojffhsurgo.supabase.co');
+      assert.equal(url.href, 'https://abcdefghijklmnopqrst.supabase.co/functions/v1/public-projects?uid=12345678-1234-4234-8234-123456789abc');
+      assert.equal(options?.method, 'GET');
+      assert.deepEqual([...new Headers(options?.headers)], []);
       assert.equal(options?.cache, 'no-store');
       calls++;
       return projectResponse(version);
@@ -78,15 +80,12 @@ test('full-document locale requests share local/UI and fresh project language', 
     version = 3;
     const failure = await request('/en/', 503);
     assert.match(failure, /Projects unavailable/u);
-    assert.doesNotMatch(failure, /private-upstream-detail|fake-local-fixture-key/u);
+    assert.doesNotMatch(failure, /private-upstream-detail/u);
     assert.equal(await request('/fr/', 404), 'Not found');
     assert.equal(calls, 4, 'unpublished locale must not fetch projects');
   } finally {
     globalThis.fetch = nativeFetch;
-    names.forEach((name, i) => {
-      if (previous[i] === undefined) delete process.env[name];
-      else process.env[name] = previous[i];
-    });
+    for (const name of names) delete process.env[name];
     server.closeAllConnections();
     if (server.listening) await new Promise((resolve) => server.close(resolve));
   }

@@ -37,14 +37,12 @@ export const pages: Page[] = [{ id: 'home', translations: {
 /** @param {number} version */
 export function projectResponse(version) {
   if (version === 3) return new Response('private-upstream-detail', { status: 403 });
-  return Response.json([
-    { id: '1', user: '12345678-1234-4234-8234-123456789abc',
-      title: `Original v${version}`, description: null, weblink: null,
-      project_translation_settings: { original_language: 'es', project_translations: [
+  return Response.json({ projects: [
+    { id: '1', title: `Original v${version}`, description: null, weblink: null,
+      originalLanguage: 'es', translations: [
         { language: 'en', title: `Translated v${version}`, description: null },
-      ] } },
-    { id: '2', user: '12345678-1234-4234-8234-123456789abc',
-      title: 'Untranslated original must not leak', description: null, weblink: null,
-      project_translation_settings: { original_language: 'es', project_translations: [] } },
-  ], { headers: { 'Content-Range': '0-1/2' } });
+      ] },
+    { id: '2', title: 'Untranslated original must not leak', description: null, weblink: null,
+      originalLanguage: 'es', translations: [] },
+  ] });
 }
