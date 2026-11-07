@@ -1,6 +1,28 @@
-# Public projects RPC reader — local T2a
+# Public projects Edge Function — local T2a/T2b
 
-`readPublicProjects(uid, config, dependencies?)` returns `Promise<PublicProject[]>` or rejects with only `Error('Projects unavailable')`. It implements the reader for S1–S5, not an HTTP endpoint or deployed Edge Function. T2b owns Request validation, statuses, JSON wrapping, CORS, three response no-store headers, Deno entry and public gateway configuration.
+The local `public-projects` function exposes public owner-selected projects without caller authentication or site keys. T2a supplies the frozen reader; T2b supplies the HTTP adapter, native entry and function-only public gateway configuration for S1–S5. Nothing here is deployed; the Astro consumer migration remains T3.
+
+## HTTP contract for consumers (T3)
+
+Call `GET <shared-function-url>?uid=<owner-uuid>` with no authentication or custom headers. UID is a public selector, not authorization: any caller can select any owner's public output. Only one `uid` query parameter is accepted, with no extra query options, credential/URL overrides or project-detail operation. UUIDs are case-insensitive and normalized by the reader.
+
+| Request/result | Status and body |
+| --- | --- |
+| Valid GET, including empty portfolio | `200 {"projects":[...]}` using the frozen public DTO below |
+| Missing, duplicate, malformed UID or any extra query parameter | `400 {"error":"Invalid query"}` |
+| OPTIONS, without reading configuration or upstream | `204`, empty body |
+| Any other method | `405 {"error":"Method not allowed"}`, `Allow: GET, OPTIONS` |
+| Invalid/missing runtime configuration, upstream failure or invalid data | `503 {"error":"Projects unavailable"}`, never partial projects |
+
+Every handler response has `Cache-Control`, `CDN-Cache-Control` and `Vercel-CDN-Cache-Control: no-store`, `Access-Control-Allow-Origin: *` and `Access-Control-Allow-Methods: GET, OPTIONS`. No credential allowance or custom-header allowance is emitted: public GET needs neither. CORS is not an authorization boundary. Each GET reads fresh data; an already open page must request again. Native HTTP servers may suppress HEAD bodies; the handler still selects the 405 response.
+
+## Runtime and operator boundary
+
+`createPublicProjectsHandler(getConfig, dependencies?)` in `handler.ts` accepts trusted configuration/dependencies for isolated tests. `index.ts` registers it with `Deno.serve`; configuration is read only on valid GETs, from exactly `SUPABASE_URL`, `SUPABASE_ANON_KEY` and `PUBLIC_PROJECTS_ROLE_JWT`. See the frozen constraints below. Sites receive only the shared function URL and owner UUID, never these credentials. No SDK or new dependency is used.
+
+`supabase/config.toml` sets `verify_jwt = false` **only** for `public-projects`, intentionally allowing unauthenticated gateway requests. This local setting changes no hosted permissions. Before rollout, the authorized operator must verify target identity, apply the restricted export/provision its runtime role, provide the three runtime values securely, and verify native runtime, gateway/CORS and grants under the [operator gates](public-projects-access.md). The user-declared target is `galia_dev` / `mygqfdbloqojffhsurgo`; it has not been machine-verified. No project linking, provisioning, remote invocation or deployment is authorized by this implementation.
+
+`runtime.d.ts` is an explicitly minimal **local structural contract** for `Deno.env.get` and the used one-handler `Deno.serve` overload, not official Deno typings. The unused server return is `unknown`. A Node fixture substitutes a fake global Deno and fetch, imports the entry, checks single registration and per-request environment wiring, then restores globals. It reads no real environment or credentials. Passing this test/type check is **not native Deno or hosted proof**.
 
 ## Frozen reader contract
 
@@ -14,6 +36,12 @@
 
 ## Verification and remaining gates
 
-Run `node --test tests/public-projects-edge-reader.test.mjs` with Node 24 and existing dependencies. Fixtures cover the public reader interface and captured native RPC Requests/Responses, not live grants or all-state SQL selection. T1 owns that SQL proof.
+Run with Node 24 and existing dependencies (no secrets):
 
-Follow [restricted export and operator gates](public-projects-access.md) before any hosted change. T1 remains unchanged. Native Deno, hosted target identity, role provisioning/rotation, Supabase/PostgREST behavior and deployment remain unverified; parent owns full application validation and independent security review. T3 sites will use only the shared public URL and owner UUID, after T2b defines the HTTP boundary.
+```sh
+node --test tests/public-projects-edge-http.test.mjs
+node --test tests/public-projects-edge*.test.mjs
+node node_modules/typescript/bin/tsc --ignoreConfig --noEmit --strict --allowJs --checkJs --allowImportingTsExtensions --module nodenext --target es2022 --lib es2022,dom --skipLibCheck supabase/functions/public-projects/*.ts tests/public-projects-edge*.test.mjs tests/helpers/public-projects-edge.mjs
+```
+
+Fixtures cover public Request/Response behavior, reader/RPC contracts, sanitized partial failures, cross-origin headers, freshness and fake entry wiring, not live grants or all-state SQL selection. T1 owns that SQL proof and remains unchanged. Native Deno is unavailable locally. Hosted target identity, role provisioning/rotation, Supabase/PostgREST behavior and deployment remain unverified; parent owns full application validation and independent security review. Local T2b does not complete R1 or migrate existing Astro configuration.

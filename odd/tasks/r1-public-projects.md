@@ -14,8 +14,8 @@ S5. Implementation approval: “Vale, procede al desarrollo de R1 con lo que hem
 ## Tasks
 
 - T1 [S1,S2,S5] done — restricted database export and isolated SQL permission checks; route: bounded writer and independent security verifier; commit: 48dd03859614c5803c6cddbd47197072d80bd915.
-- T2a [S1-S5] in_progress — Edge RPC reader, public DTO validation and pagination with focused tests and contract docs; route: writer GREEN 41/41 and strict types, independent verification pending; commit: pending.
-- T2b [S1-S5] pending — public HTTP handler, checked Deno entry, gateway config and tests/operator guide; route: bounded writer, independent verification; commit: pending.
+- T2a [S1-S5] done — Edge RPC reader, public DTO validation and pagination with focused tests and contract docs; route: writer and independent verifier 41/41 plus strict types, full suite 81/81; commit: 1d7a97a84f52b9314ba15f4498e193dfe47a913e.
+- T2b [S1-S5] in_progress — public HTTP handler, checked Deno entry, gateway config and tests/operator guide; route: bounded writer, independent verification; commit: pending.
 - T3 [S1-S5] pending — Astro server consumer and fixtures/docs without site privileged keys; route: bounded writer, independent verification; commit: pending.
 - T4 [S1-S5] pending — full validation, independent security checks, native review and accurate rollout handoff; route: parent and independent verifier; commit: pending.
 
@@ -31,3 +31,7 @@ L7. T1 evidence: writer observed missing-migration RED (40 tests, 1 pass/39 fail
 L8. T2 worker returned interaction_required before edits/tests, estimating 500–650 lines. Parent splits by cohesive behavior, not code versus tests: T2a reader/validation/pagination + tests/docs, T2b HTTP adapter/native entry + tests/docs. Both retain original scope and correction limit; no setup or code correction attempts consumed. Exact focused Node/TypeScript commands supplied in continuation. No human product decision is needed for this internal split.
 
 L9. T2a writer-reported RED: node --test tests/public-projects-edge-reader.test.mjs before module creation, exit 1, 0 passed/1 failed. First implementation attempt: 1/35 due fixture JWT padding; corrected fixtures 36/36; expanded final coverage 41/41. Strict TypeScript initially failed fixture annotations (exit 2), then passed (exit 0). Parent retains attributed worker evidence, not independently replayed RED. Independent focused run 41/41 and strict types passed once; final structural verdict pending. Parent full validate exit 0, 81/81, no skipped tests. No runtime or live deployment proof.
+
+L10. T2a native review review-4700996177e0f4b0 approved and exact acknowledgement burned authority; independent verifier final verdict no candidate blockers. Commit 1d7a97a84f52b9314ba15f4498e193dfe47a913e. Delivery strategy: separate reviewable work-unit slices, never accumulated feature diff. Slice 1 fcc9ac4..48dd038 (T1, 388 lines); slice 2 48dd038..1d7a97a (T2a, 361 diff lines); next slice starts at 1d7a97a. No push/PR creation/merge authorized. T2b proceeds with native runtime execution still unavailable locally.
+
+L11. T2b writer reported missing-handler RED exit1 0/1, then HTTP 8/8 and combined 49/49. Strict types initially TS7006, JSDoc placement correction then exit0. 262 authored diff lines; independent verification mw6uju2z-a-o94g in progress, full validation pending. Native Deno unavailable; fake runtime contract is not hosted proof. No remote changes.
