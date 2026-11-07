@@ -1,6 +1,6 @@
 # Restricted public projects export — local T1 only
 
-This additive SQL unit covers S1/S2/S5: read-only public DTOs selected by owner UUID. It does **not** deploy R1, change the existing [Astro consumer](projects.md), or authorize production access. UID selects public content; it is not visitor authentication or tenant authorization.
+This additive SQL unit covers S1/S2/S5: read-only public DTOs selected by owner UUID. It does **not** deploy R1 or authorize production access. The separate T3 unit has now migrated the local [Astro consumer](projects.md). UID selects public content; it is not visitor authentication or tenant authorization.
 
 ## Run the isolated proof
 
@@ -34,7 +34,7 @@ The SQL signature is `(uuid, integer, integer) RETURNS jsonb`. All arguments are
 | `public_projects_export_owner` | NOLOGIN, NOINHERIT, NOBYPASSRLS; owns the fixed-search-path SECURITY DEFINER RPC. Exact column SELECT only on the three existing tables; dedicated SELECT policies permit all owners. No state/private-column grants or writes. |
 | `public_projects_runtime` | Separate NOLOGIN, NOINHERIT, NOBYPASSRLS role. Explicit EXECUTE only on this RPC, schema USAGE, no table grants or export-owner membership. |
 | `authenticator` | May SET ROLE to runtime, without inheriting it (PostgreSQL 16+ membership syntax). Existing management memberships/grants are untouched. |
-| Edge (proposed T2) | `SUPABASE_URL`, public infrastructure `SUPABASE_ANON_KEY` for `apikey`, and operator-provisioned secret `PUBLIC_PROJECTS_ROLE_JWT` for `Authorization: Bearer …` with runtime role claim. Never use a service-role key. |
+| Edge (local T2) | `SUPABASE_URL`, public infrastructure `SUPABASE_ANON_KEY` for `apikey`, and operator-provisioned secret `PUBLIC_PROJECTS_ROLE_JWT` for `Authorization: Bearer …` with runtime role claim. Never use a service-role key. |
 | Sites (T3) | Only `MOCKLAB_PROJECTS_URL` (shared public Edge endpoint) and `MOCKLAB_USER_ID`. No old-name fallback, role JWT or infrastructure key on sites. |
 
 The migration is transactional and one-shot: name collisions fail, rather than adopting/replacing pre-existing objects. It refuses disabled RLS or existing PUBLIC table/column privileges on these three tables; it never repairs them by revoking management access. Permissive PUBLIC **policies** do not grant column access. PUBLIC/anon/authenticated EXECUTE is revoked on this RPC only.
@@ -46,7 +46,7 @@ The migration is transactional and one-shot: name collisions fail, rather than a
 - Confirm the intended `galia_dev` / `mygqfdbloqojffhsurgo` target and PostgreSQL version through authorized project identity tooling, not a generic SQL login. Confirm actual table types, unique/FK relations, RLS policies, effective/default grants and policy dependencies against the fixture assumptions before applying anything.
 - Audit inherited PUBLIC access and definer functions; resolve unsafe access separately with management-owner approval. Confirm the deploying principal can create roles/policies and transfer function ownership. Never give runtime membership in management/export-owner roles.
 - Separately authorize migration application, PostgREST schema-cache refresh/exposure, custom role JWT provisioning/rotation/expiry, infrastructure key and Edge gateway configuration. Verify hosted role switching, sanitized failures, no-store and real HTTP pagination before deployment approval. No tokens are minted/read by this unit.
-- Run parent-owned full application validation and independent security verification. Local PostgreSQL proof does not establish hosted Supabase/PostgREST/Vercel behavior or close R1.
+Local evidence is recorded in the [R1 task log](../odd/tasks/r1-public-projects.md): isolated SQL62/62, final application validation150/150, independent consumer16/16 and approved native code reviews. These completed checks do not establish hosted Supabase/PostgREST/Vercel behavior or close R1.
 
 ## Rollback boundary
 

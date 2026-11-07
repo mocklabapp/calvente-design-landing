@@ -1,6 +1,6 @@
 # Public projects Edge Function — local T2a/T2b
 
-The local `public-projects` function exposes public owner-selected projects without caller authentication or site keys. T2a supplies the frozen reader; T2b supplies the HTTP adapter, native entry and function-only public gateway configuration for S1–S5. Nothing here is deployed; the Astro consumer migration remains T3.
+The local `public-projects` function exposes public owner-selected projects without caller authentication or site keys. T2a supplies the frozen reader; T2b supplies the HTTP adapter, native entry and function-only public gateway configuration for S1–S5. Nothing here is deployed. T3 has migrated the local Astro consumer to `MOCKLAB_PROJECTS_URL` and `MOCKLAB_USER_ID`; see the [site configuration guide](projects.md).
 
 ## HTTP contract for consumers (T3)
 
@@ -44,4 +44,4 @@ node --test tests/public-projects-edge*.test.mjs
 node node_modules/typescript/bin/tsc --ignoreConfig --noEmit --strict --allowJs --checkJs --allowImportingTsExtensions --module nodenext --target es2022 --lib es2022,dom --skipLibCheck supabase/functions/public-projects/*.ts tests/public-projects-edge*.test.mjs tests/helpers/public-projects-edge.mjs
 ```
 
-Fixtures cover public Request/Response behavior, reader/RPC contracts, sanitized partial failures, cross-origin headers, freshness and fake entry wiring, not live grants or all-state SQL selection. T1 owns that SQL proof and remains unchanged. Native Deno is unavailable locally. Hosted target identity, role provisioning/rotation, Supabase/PostgREST behavior and deployment remain unverified; parent owns full application validation and independent security review. Local T2b does not complete R1 or migrate existing Astro configuration.
+Fixtures cover public Request/Response behavior, reader/RPC contracts, sanitized partial failures, cross-origin headers, freshness and fake entry wiring, not live grants or all-state SQL selection. T1 owns that SQL proof and remains unchanged. Native Deno is unavailable locally. Hosted target identity, role provisioning/rotation, Supabase/PostgREST behavior and deployment remain unverified; parent owns full application validation and independent security review. The later T3 migration and final local validation150/150 are recorded in the [R1 task log](../odd/tasks/r1-public-projects.md); they do not complete the pending native-runtime or hosted rollout proof.
