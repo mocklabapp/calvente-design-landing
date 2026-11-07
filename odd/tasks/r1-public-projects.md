@@ -15,8 +15,9 @@ S5. Implementation approval: “Vale, procede al desarrollo de R1 con lo que hem
 
 - T1 [S1,S2,S5] done — restricted database export and isolated SQL permission checks; route: bounded writer and independent security verifier; commit: 48dd03859614c5803c6cddbd47197072d80bd915.
 - T2a [S1-S5] done — Edge RPC reader, public DTO validation and pagination with focused tests and contract docs; route: writer and independent verifier 41/41 plus strict types, full suite 81/81; commit: 1d7a97a84f52b9314ba15f4498e193dfe47a913e.
-- T2b [S1-S5] in_progress — public HTTP handler, checked Deno entry, gateway config and tests/operator guide; route: bounded writer, independent verification; commit: pending.
-- T3 [S1-S5] pending — Astro server consumer and fixtures/docs without site privileged keys; route: bounded writer, independent verification; commit: pending.
+- T2b [S1-S5] done — public HTTP handler, checked Deno entry, gateway config and tests/operator guide; route: writer and verifier 49/49 plus types, full suite89/89; commit: 558bb8570126472a0fd7fca116a276ca219ab13a.
+- T3a [S1-S5] in_progress — standalone site public-Edge client with complete contract tests/docs; route: bounded writer, independent verification; commit: pending.
+- T3b [S1-S5] pending — wire getProjects to public client, migrate HTTP/SSR fixtures and config docs; route: bounded writer, independent verification; commit: pending.
 - T4 [S1-S5] pending — full validation, independent security checks, native review and accurate rollout handoff; route: parent and independent verifier; commit: pending.
 
 ## Log
@@ -35,3 +36,9 @@ L9. T2a writer-reported RED: node --test tests/public-projects-edge-reader.test.
 L10. T2a native review review-4700996177e0f4b0 approved and exact acknowledgement burned authority; independent verifier final verdict no candidate blockers. Commit 1d7a97a84f52b9314ba15f4498e193dfe47a913e. Delivery strategy: separate reviewable work-unit slices, never accumulated feature diff. Slice 1 fcc9ac4..48dd038 (T1, 388 lines); slice 2 48dd038..1d7a97a (T2a, 361 diff lines); next slice starts at 1d7a97a. No push/PR creation/merge authorized. T2b proceeds with native runtime execution still unavailable locally.
 
 L11. T2b writer reported missing-handler RED exit1 0/1, then HTTP 8/8 and combined 49/49. Strict types initially TS7006, JSDoc placement correction then exit0. 262 authored diff lines; independent verification mw6uju2z-a-o94g in progress, full validation pending. Native Deno unavailable; fake runtime contract is not hosted proof. No remote changes.
+
+L12. T2b independent49/49 and strict types pass, parent full validate89/89. Native review-eac802946ac0ba89 approved and acknowledged/burned. Commit558bb8570126472a0fd7fca116a276ca219ab13a; slice3 1d7a97a..558bb85,270 diff lines. Next slice base558bb85. T3 consumer migration starts; no Edge source changes planned. Existing .env.example is human-owned from prior R5 guard history; do not bypass protected writes or read real .env. Any needed template adjustment is a human gate, not grounds to weaken its tests.
+
+L13. T3 writer mw6uv4qk-b-3q6k stopped before writes: existing template semantic validator is tests/helpers/toolchain-fixture.mjs, not environment-example.mjs. Parent approves narrow existing helper and splits into additive T3a client+tests/docs, then T3b activation+fixtures+docs. No knowingly failing intermediate commit. Parent will request human-owned blank template change when activating T3b; no agent template writes or bypass.
+
+L14. T3a writer added dormant client+response parser+61 tests+docs (279 lines). Reported RED missing module exit1 0/1; GREEN61/61. Standalone tsc exit2 (Astro resolution and annotations); annotations corrected and authorized Astro check exit0, zero errors/warnings, two hints. Independent verifier mw6v1d81-d-67ql running focused61 and Astro check; parent full validation runs afterward to avoid concurrent generated-file writes. No existing consumer/config/template activation yet.
