@@ -1,5 +1,7 @@
 # Restricted public projects export
 
+**Local portfolio successor (not applied remotely):** `202608010001_public_projects_portfolio.sql` extends the export with images/category/year. The historical migration remains unchanged and must never be replayed. Hosted evidence below covers R1 only, not this extension.
+
 **R1/T4 is Completed / verified** for the authorized implementation and Edge-deployed scope. This additive SQL unit covers S1/S2/S5/S7: read-only public DTOs selected by owner UUID. Under separate S8 approval, the reviewed SQL is installed in `galia_dev` / `mygqfdbloqojffhsurgo`. SQL installation alone is not runtime proof; the separately authorized Edge v1 deployment and parent live HTTP checks are recorded below. T3 migrated the [Astro consumer](projects.md). UID selects public content; it is not visitor authentication or tenant authorization.
 
 ## Run the isolated proof
@@ -25,7 +27,8 @@ The SQL signature is `(uuid, integer, integer) RETURNS jsonb`. All arguments are
 ```
 
 - `total` is an exact decimal **string** for all matching projects, including on an empty/out-of-range page. `count` is the returned array length; offset/limit echo validated integers.
-- Projects are ordered by numeric bigint ID, cast to text **before** JSON construction. Each contains only `id`, nullable `title`, `description`, `weblink`, nullable `originalLanguage`, and `translations`.
+- Projects are ordered by numeric bigint ID, cast to text **before** JSON construction. Each contains only `id`, nullable `title`, `description`, `weblink`, nullable `originalLanguage`, `translations`, ordered URL-only `images`, and nullable text `category`/`year`.
+- `image_data` is JSONB: SQL NULL becomes `[]`; a present JSON value must be an array of objects with nonempty string URLs. Validate the selected page before projecting to prevent coercion or silent image dropping. JSON null, malformed containers/entries and missing/nonstring URLs raise `22023`. Ordinality preserves source order; no status/group/cover inference. Only URL leaves each object. Edge/site then enforce the trusted-origin public storage URL policy; SQL alone is not URL-safety proof.
 - Translations contain only `language`, nullable `title` and `description`, ordered by language using C collation. Settings join by project ID; translations join settings by project ID **and** original language. Missing settings mean unknown language and an empty array; partial fields remain null. No state filtering or language fallback occurs.
 - Edge must validate the envelope/DTO, safe totals, increasing unique IDs and progress; advance by `count`, not requested limit. Stop only at the exact total; reject zero progress, inconsistent totals or exhaustion of time/page bounds. Never return a knowingly truncated success. One RPC uses one statement snapshot; multiple requests are not a shared snapshot under concurrent edits.
 
@@ -44,6 +47,14 @@ The migration is transactional and one-shot: name collisions fail, rather than a
 For non-superuser deployment, the principal needs CREATEROLE, table/policy ownership and authority to create functions and grant/revoke CREATE on `public`. The migration temporarily grants membership in the **new** export-owner role to `CURRENT_USER` and schema CREATE to that new role, transfers function ownership, then revokes both exact temporary grants before COMMIT. Any failure rolls back this transaction. No existing app membership, table grant or schema grant is revoked. Local fixture authority models these prerequisites; it does not establish that the hosted deploying principal has them. PostgreSQL 15 semantics are documented in [ALTER FUNCTION](https://www.postgresql.org/docs/15/sql-alterfunction.html) and [role membership](https://www.postgresql.org/docs/15/role-membership.html).
 
 **Not global hardening:** NOINHERIT does not remove PUBLIC privileges. Existing/default PUBLIC EXECUTE on other functions, especially SECURITY DEFINER functions, can remain reachable by either new role. Schema CREATE, other schemas/tables, future grants, existing restrictive policies and policy-function dependencies need operator audit. This migration does not claim that runtime can effectively execute only one function across the database, or that existing management access became read-only.
+
+## Portfolio successor boundaries
+
+The new migration grants SELECT only on `image_data`, `category` and `year` to the existing export owner, never runtime or the entire table. It uses CREATE OR REPLACE with the original signature, fixed search path and SECURITY DEFINER boundary, retaining existing ownership and EXECUTE ACL. Temporary deployer membership/schema CREATE are revoked before commit; the preflight refuses unexpected owner/membership/CREATE baselines instead of silently adopting or revoking them. It assumes the original restricted-role setup remains in place and does not repair permission drift or broaden management access.
+
+The isolated checker applies the historical migration once, then the successor as its non-superuser fixture deployer. It checks the preserved ACL/management baseline and exact project-column allowlist; `public-projects-images.sql` exercises invalid JSONB before projection and owner separation. `public-projects-output.sql` covers ordered images, text/null/empty values and unchanged language/state/pagination semantics. These are fixtures, not remote migration authorization. Run the checker only with existing local prerequisites; the parent owns its artifact-producing execution for this change.
+
+For a separately approved rollout, apply only the successor to the already-installed export and deploy the current Edge closure, including `images.ts`; independently verify native runtime, live storage addressing and grants before claiming these fields are live. No remote changes, credential reads or image requests are part of local implementation. The URL and consumer-compatibility rules are in the [site contract](projects.md#exact-data-contract).
 
 ## Operator-only gates
 

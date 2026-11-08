@@ -8,7 +8,7 @@ const endpoint = 'https://abcdefghijklmnopqrst.supabase.co/functions/v1/public-p
 const uid = '12345678-1234-4234-8234-123456789abc';
 /** @param {string} [id] */
 const project = (id = '9007199254740993') => ({ id, title: 'Public', description: null,
-  weblink: null, originalLanguage: null, translations: [] });
+  weblink: null, originalLanguage: null, translations: [], images: [], category: null, year: null });
 /** @param {unknown} body */
 const response = (body) => Response.json(body);
 /** @param {() => Promise<unknown>} action */

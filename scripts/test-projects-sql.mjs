@@ -142,6 +142,26 @@ try {
     if (failed) throw new Error('Migration probe failed; remaining probes were not run');
   }
 
+  const portfolioMigration = source('supabase/migrations/202608010001_public_projects_portfolio.sql');
+  const exportAcl = "SELECT proacl::text FROM pg_proc WHERE oid='public.export_public_projects(uuid,integer,integer)'::regprocedure";
+  const aclBefore = success(exportAcl);
+  test('portfolio successor replaces export as non-superuser without changing its ACL', () => {
+    success(`SET SESSION AUTHORIZATION fixture_deployer; ${portfolioMigration}`);
+    assert.equal(success(exportAcl), aclBefore);
+  });
+  if (failed) throw new Error('Portfolio migration failed; remaining probes were not run');
+  test('export owner receives exactly the approved project columns, never whole-table SELECT', () => {
+    const columns = success(`SELECT string_agg(column_name::text, ',' ORDER BY column_name)
+      FROM information_schema.columns WHERE table_schema='public' AND table_name='projects'
+      AND has_column_privilege('public_projects_export_owner', 'public.projects', column_name, 'SELECT')`).trim();
+    assert.equal(columns, 'category,description,id,image_data,title,user,weblink,year');
+    assert.equal(success("SELECT has_table_privilege('public_projects_export_owner', 'public.projects', 'SELECT')").trim(), 'f');
+  });
+  test('malformed jsonb fails before projection and never drops invalid images', () => {
+    success(source('supabase/tests/public-projects-images.sql'));
+    assert.equal(success(snapshot), before);
+  });
+
   test('existing application roles, memberships, grants, policies and RPC are unchanged', () => {
     assert.equal(success(legacyAccess), accessBefore);
     assert.equal(success(snapshot), before, 'Migration must not modify fake rows');

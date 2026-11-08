@@ -1,4 +1,5 @@
-import type { PublicProject } from './projects.ts';
+import type { NormalizedPublicProject } from './projects.ts';
+import { parseProjectImages } from './project-images.ts';
 
 const unavailable = () => new Error('Projects unavailable');
 
@@ -18,7 +19,7 @@ function language(value: unknown): string {
 }
 
 /** Validate the public Edge envelope, reconstructing only allowlisted fields. */
-export function parseProjectsResponse(value: unknown): PublicProject[] {
+export function parseProjectsResponse(value: unknown, origin: string): NormalizedPublicProject[] {
   const envelope = record(value);
   if (!Array.isArray(envelope.projects)) throw unavailable();
   let previous = 0n;
@@ -44,6 +45,9 @@ export function parseProjectsResponse(value: unknown): PublicProject[] {
       weblink: text(row.weblink),
       originalLanguage: row.originalLanguage === null ? null : language(row.originalLanguage),
       translations,
+      images: Object.hasOwn(row, 'images') ? parseProjectImages(row.images, origin) : [],
+      category: Object.hasOwn(row, 'category') ? text(row.category) : null,
+      year: Object.hasOwn(row, 'year') ? text(row.year) : null,
     };
   });
 }

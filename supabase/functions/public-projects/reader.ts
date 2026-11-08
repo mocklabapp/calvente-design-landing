@@ -43,7 +43,7 @@ export async function readPublicProjects(
       if (!response.ok || response.redirected) throw unavailable();
       const value: unknown = await response.json();
       signal.throwIfAborted();
-      const page = parsePage(value, offset);
+      const page = parsePage(value, offset, new URL(base).origin);
       if (total !== undefined && page.total !== total) throw unavailable();
       total = page.total;
       if (offset + page.projects.length > total) throw unavailable();

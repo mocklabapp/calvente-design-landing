@@ -1,5 +1,7 @@
 # Public projects Edge Function
 
+**Local portfolio extension (not deployed):** the current source adds ordered URL-only `images` and nullable text `category`/`year`. It requires the separately authorized successor SQL migration and Edge rollout. All deployment evidence below describes the historical R1 contract, not these new fields.
+
 **R1/T4 is Completed / verified** for the authorized implementation and Edge deployment. The shared `public-projects` function exposes public owner-selected projects without caller authentication or site keys. Version 1 is active on the approved project; the parent verified a populated read through the actual Astro client: HTTP 200, 22 projects, 0 translations, public-field allowlist and no-store/CORS checks passed. Live translations/multipage cases, other-app functional checks and Vercel deployment were not exercised.
 
 T2 supplies the reader/HTTP adapter and native entry; T7/S10 adds publishable infrastructure key selection while preserving the restricted bearer and legacy compatibility. T3 migrated the Astro consumer: each site needs only `MOCKLAB_PROJECTS_URL` (shared endpoint) and `MOCKLAB_USER_ID` (owner UUID), never a token. See the [site configuration guide](projects.md).
@@ -38,7 +40,7 @@ Parent-reported HTTP evidence, in order:
 
 The anon warning was closed and the human chose to ignore it; its exact text is unavailable. Official new API keys coexist with legacy keys; no key rotation/revocation occurred. Existing-app functionality was not tested.
 
-The source manifest under `supabase/functions/public-projects/` is `index.ts`, `handler.ts`, `reader.ts`, `validation.ts` and `runtime.d.ts`. The entrypoint is `index.ts`; preserve the explicit relative imports and its reference to the declaration file. There are no external runtime imports in this closure. The manifest alone is not runtime proof; the deployment and parent HTTP results above supply bounded hosted evidence.
+The current source manifest under `supabase/functions/public-projects/` is `index.ts`, `handler.ts`, `reader.ts`, `validation.ts`, `images.ts` and `runtime.d.ts`; the historical deployment above predates `images.ts`. The entrypoint is `index.ts`; preserve the explicit relative imports and its reference to the declaration file. There are no external runtime imports in this closure. The manifest alone is not runtime proof; the deployment and parent HTTP results above supply bounded hosted evidence.
 
 The following preparation safeguards remain an operator reference for future authorized maintenance, not open R1 implementation tasks or instructions to repeat deployment:
 
@@ -61,7 +63,8 @@ Official references: [MCP capabilities and secret entry](https://supabase.com/do
 - Role-claim checks catch configuration mistakes; they do not verify signatures, expiry or database permissions. PostgREST and operator provisioning own those checks. Never put the restricted JWT on a website. Its `PUBLIC_` name does **not** make it public.
 - Optional trusted dependencies are `{ fetch: typeof fetch, timeout?: typeof AbortSignal.timeout }`; defaults use native fetch and one shared 10-second deadline. Tests inject only fake RPC responses/signals, never production configuration.
 - Every RPC is POST to `/rest/v1/rpc/export_public_projects` with `{p_owner, p_offset, p_limit:200}`, public infrastructure `apikey`, restricted bearer JWT, `cache:'no-store'`, `redirect:'error'` and the shared abort signal.
-- Output has exactly `id`, nullable `title/description/weblink`, nullable `originalLanguage` (`es/en/ca`), and `translations` containing only `language` (`es/en/ca`), nullable `title/description`. Positive signed-bigint IDs remain strings. Extra upstream fields are discarded; duplicate translations fail. No state filtering or language fallback occurs.
+- Output has exactly `id`, nullable `title/description/weblink`, nullable `originalLanguage` (`es/en/ca`), `translations` containing only `language` (`es/en/ca`), nullable `title/description`, ordered `images` containing only `url`, and nullable text `category`/`year`. Positive signed-bigint IDs remain strings. Extra upstream fields are discarded; duplicate translations fail. No state filtering or language fallback occurs.
+- Absent additions from older SQL responses normalize to `[]`/`null`. Present malformed fields fail the whole read. `images.ts` validates every image against the configured `SUPABASE_URL` origin and public `projects-images` object path; it rejects credentials/ports, query/fragment, signed/private paths, traversal and controls. Encoded object names are preserved. It strips status/processing metadata, never filters invalid images. The site independently applies the same policy; parity fixtures protect the two self-contained deployment roots. See [field and URL details](projects.md#exact-data-contract).
 - Pagination advances by actual count, tolerating lower upstream caps. Offset/limit/count must match; decimal-string totals must stay exact and stable. Totals above 1,000,200, offsets above 1,000,000, zero progress, non-increasing IDs, overflow, invalid JSON/data and upstream errors fail without partial output. Separate pages are not a transactional snapshot.
 
 ## Verification evidence and limits

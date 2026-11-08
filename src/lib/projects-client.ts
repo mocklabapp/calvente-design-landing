@@ -1,4 +1,4 @@
-import type { PublicProject } from './projects.ts';
+import type { NormalizedPublicProject } from './projects.ts';
 import { parseProjectsResponse } from './projects-response.ts';
 
 export interface ProjectsClientDependencies {
@@ -11,7 +11,7 @@ export async function fetchPublicProjects(
   endpoint: string | undefined,
   uid: string | undefined,
   dependencies: ProjectsClientDependencies = { fetch: globalThis.fetch },
-): Promise<PublicProject[]> {
+): Promise<NormalizedPublicProject[]> {
   try {
     if (!endpoint || !/^https:\/\/[a-z0-9]{20}\.supabase\.co\/functions\/v1\/public-projects$/.test(endpoint)
       || !uid || uid.length !== 36
@@ -30,7 +30,7 @@ export async function fetchPublicProjects(
     if (response.status !== 200 || response.redirected) throw new Error('Invalid response');
     const body: unknown = await response.json();
     signal.throwIfAborted();
-    return parseProjectsResponse(body);
+    return parseProjectsResponse(body, url.origin);
   } catch {
     // Never forward configuration, upstream bodies, network details or error causes.
     throw new Error('Projects unavailable');

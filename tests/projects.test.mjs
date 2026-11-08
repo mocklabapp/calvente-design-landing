@@ -9,7 +9,8 @@ const owner = '12345678-1234-4234-8234-123456789abc';
 const endpoint = 'https://abcdefghijklmnopqrst.supabase.co/functions/v1/public-projects';
 /** @param {string} [id] */
 const row = (id = '9007199254740993') => ({ id, title: 'Public',
-  description: null, weblink: null, originalLanguage: null, translations: [] });
+  description: null, weblink: null, originalLanguage: null, translations: [],
+  images: [], category: null, year: null });
 /** @param {unknown[]} projects */
 const response = (projects) => Response.json({ projects });
 /** Invoke the public route with visitor input, without fabricating Astro internals.
@@ -123,6 +124,10 @@ test('errors and malformed public data fail closed without upstream details', as
     async () => response([{ ...row(), id: 9007199254740992 }]),
     async () => response([{ ...row(), title: {} }]),
     async () => response([{ ...row(), translations: {} }]),
+    async () => response([{ ...row(), images: null }]),
+    async () => response([{ ...row(), images: [{ url: 'https://private.test/PRIVATE' }] }]),
+    async () => response([{ ...row(), category: {} }]),
+    async () => response([{ ...row(), year: 2024 }]),
     async () => new Response('{broken'),
     async () => Response.json([]),
   ]) {

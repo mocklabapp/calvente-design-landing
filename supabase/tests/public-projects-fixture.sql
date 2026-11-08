@@ -12,7 +12,11 @@ CREATE FUNCTION auth.role() RETURNS text LANGUAGE sql STABLE
 AS $$ SELECT current_setting('request.jwt.claim.role', true) $$;
 CREATE TABLE public.projects (
   id bigint PRIMARY KEY, "user" uuid NOT NULL, title text, description text,
-  weblink text, state text, prompt text DEFAULT 'private'
+  weblink text, state text, prompt text DEFAULT 'private',
+  image_data jsonb, category text, year text,
+  "photoCredit" text DEFAULT 'private', "photoCreditLink" text DEFAULT 'private',
+  authors text DEFAULT 'private', collaborators text DEFAULT 'private',
+  "googleMaps" text DEFAULT 'private', "showMap" boolean DEFAULT true
 );
 CREATE TABLE public.project_translation_settings (
   project_id bigint PRIMARY KEY REFERENCES public.projects,
@@ -48,6 +52,12 @@ INSERT INTO public.projects (id, "user", title, description, weblink, state) VAL
   (2, '11111111-1111-1111-1111-111111111111', null, 'Published', 'https://example.test', 'published'),
   (9007199254740993, '11111111-1111-1111-1111-111111111111', 'Archived', null, null, 'archived'),
   (3, '22222222-2222-2222-2222-222222222222', 'Other', null, null, 'draft');
+UPDATE public.projects SET image_data = '[
+  {"url":"https://abcdefghijklmnopqrst.supabase.co/storage/v1/object/public/projects-images/second%20photo.jpg",
+   "status":"pending","processingResult":{"timestamps":"private"}},
+  {"url":"https://abcdefghijklmnopqrst.supabase.co/storage/v1/object/public/projects-images/first.jpg",
+   "status":"done"}]', category = 'Architecture', year = '2024–2025' WHERE id = 1;
+UPDATE public.projects SET image_data = '[]', category = '', year = '' WHERE id = 2;
 INSERT INTO public.project_translation_settings (project_id, original_language)
 VALUES (1, 'es'), (2, 'ca'), (3, 'en');
 INSERT INTO public.project_translations (project_id, original_language, language, title, description)
