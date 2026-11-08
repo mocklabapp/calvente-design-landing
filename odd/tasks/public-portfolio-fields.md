@@ -13,9 +13,9 @@ Remote rollout is excluded. Risk: item 2 (public-data projection and restricted 
 - S8: "No deduzcas el idioma del texto ni introduzcas un fallback silencioso."
 
 ## Tasks
-- T1 [done] S1-S8 | route: bounded writer (parent context backstop) | commit: pending | implement additive contract, fixtures/tests and documentation
-- T2 [done] S1-S8 | route: independent verifier (risk item 2) + local validate and SQL checks | commit: pending
-- T3 [in_progress] S1-S8 | route: parent native review and local work-unit commit | commit: pending
+- T1 [done] S1-S8 | route: bounded writer (parent context backstop) | commit: 2ff8c751463d961e91a58937ede258e113796feb | implement additive contract, fixtures/tests and documentation
+- T2 [done] S1-S8 | route: independent verifier (risk item 2) + local validate and SQL checks | commit: 2ff8c751463d961e91a58937ede258e113796feb
+- T3 [done] S1-S8 | route: parent native review and local work-unit commit | commit: 2ff8c751463d961e91a58937ede258e113796feb
 
 ## Log
 ### L1 Original request (verbatim)
@@ -113,3 +113,7 @@ Worker completed S1-S8 local implementation. RED 0/80; final focused GREEN 238/2
 
 ### L6 T2 verification evidence
 Full validate exit 0: Astro 0 errors/warnings (2 existing bigint fixture hints), build and 301/301 tests. Isolated PostgreSQL 15 successor/ACL/data checks: 75/75 exit 0. Independent verifier: 238/238 focused tests, no actionable code/security defects; S1-S5/S7-S8 pass. S6 GREEN and functional proof pass; RED was observed/reported by writer (0/80), but its supplied ephemeral log is unavailable (ENOENT), so independent RED replay/provenance is not claimed. No requirement mandates independent re-execution of RED; preserve this limitation rather than fabricate evidence. Explicit strict MJS tsc initially lacked Astro ambient declarations (TS2307); including existing .astro/types.d.ts passed with exit 0. All touched code <=300 lines, historical migration unchanged. Native/hosted runtime and real image existence/rights are not established and are outside local scope.
+
+### L7 Close and slice boundary
+Local work-unit commit: 2ff8c751463d961e91a58937ede258e113796feb on feat/public-portfolio-fields. One cohesive end-to-end data contract slice: 594 authored diff lines including approximately 115 tracking lines; implementation/tests/docs approximately 479. This exceeds the approximate 400-line target; no code was compressed or tests dropped. Delivery strategy: retain this local cohesive unit; no push/PR/merge authorized. The next commit only records verification/closure, not additional behavior.
+Native review consent declined for this exact candidate; lineage_created false, no authority mutation. Outside-view review is skipped, not approved. Independent security verification and local checks completed as L6 records. Risk: item 2 (public-data boundary and SQL column grants). No remote migration, deployment, permission or secret changes. New migration remains local; operational rollout requires separate human authorization. URL validation does not establish image existence or usage rights. RED provenance limitation remains disclosed.
