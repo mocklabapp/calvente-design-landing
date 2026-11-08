@@ -14,7 +14,7 @@ corepack pnpm dev
 
 Install explicitly before version/exec probes on a fresh copy. After installation, `node --version` should report 24.x and `corepack pnpm --version` should report `12.16.1`. Scripts resolve local Astro binaries directly, without invoking another package manager.
 
-Open the URL printed by Astro (normally http://localhost:4321). Static pages, development, type checks, builds and tests need no credentials. Only optional live portfolio data needs configuration: copy the canonical blank [`.env.example`](.env.example) to a local `.env` yourself (`cp .env.example .env`), then fill it locally following [the projects guide](docs/projects.md). Never put credentials in the example or browser code.
+Open the URL printed by Astro (normally http://localhost:4321). Static pages, development, type checks, builds and tests need no credentials. Only optional live portfolio data needs configuration: copy the canonical blank [`.env.example`](.env.example) to a local `.env` yourself (`cp .env.example .env`), then fill it locally following [the projects guide](docs/projects.md). The site uses only `MOCKLAB_PROJECTS_URL` and `MOCKLAB_USER_ID`, never a database/API key. Never put credentials in the example or browser code.
 
 ## Commands
 
@@ -77,11 +77,11 @@ Keep the home page's name and description connected to the shared configuration;
 
 ## Live public projects
 
-Use `getProjects()` from server-only native Astro frontmatter or fetch `GET /api/projects.json` from a browser component. No React hook is required. The environment UUID fixes one owner; all project states are public. The exact return allowlist is `id`, `title`, `description`, `weblink`, `originalLanguage` and `translations` containing only `language`, `title`, `description`; images and keywords are not included. Missing/partial translations are preserved without fallback or enabling site locales.
+Use `getProjects()` from server-only native Astro frontmatter or fetch `GET /api/projects.json` from a browser component. No React hook is required. `getProjects()` reads the configured public Edge URL and owner UUID per request and sends a credential-free GET. The environment UUID fixes the site's displayed owner; it is a public selector, not authorization. All project states are public. The exact return allowlist is `id`, `title`, `description`, `weblink`, `originalLanguage` and `translations` containing only `language`, `title`, `description`; images and keywords are not included. Missing/partial translations are preserved without fallback or enabling site locales.
 
 For a future localized live page, use `selectProjectContent(project, page.locale)` alongside the same published page's local copy/UI. Native language links load the whole selected-language page; missing/partial project text never silently falls back. Follow the [copyable SSR example](docs/projects.md#consume-in-native-astro-frontmatter) and [locale registration/UI/content/enable steps](docs/i18n.md#add-another-language-independently); data languages do not enable site locales.
 
-Routes rendering this data must use `prerender = false` and no-store response headers so dashboard changes appear on subsequent requests without rebuilding. The existing pages remain static. See [the projects guide](docs/projects.md) for examples, runtime setup, security boundaries and the **unresolved bundled-Zod dependency advisory**. This integration does not create a visual portfolio page or authorize deployment.
+Routes rendering this data must use `prerender = false` and no-store response headers so dashboard changes appear on subsequent requests without rebuilding. The existing pages remain static. See [the projects guide](docs/projects.md) for examples, runtime setup, security boundaries and the **unresolved bundled-Zod dependency advisory**. This integration does not create a visual portfolio page or authorize deployment. Shared Edge rollout, native-runtime and hosted permission/gateway proof remain operator gates; no live service is assumed.
 
 ## Styling contract
 

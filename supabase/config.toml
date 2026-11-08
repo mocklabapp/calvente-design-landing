@@ -1,0 +1,3 @@
+# Public owner selector: no caller JWT or site credential is required.
+[functions.public-projects]
+verify_jwt = false

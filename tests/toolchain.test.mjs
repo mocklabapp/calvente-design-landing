@@ -46,14 +46,17 @@ for (const script of /** @type {const} */ (['test', 'validate'])) {
 }
 
 test('environment validation accepts legal formatting without weakening empty values', () => {
-  const valid = ' export SUPABASE_SECRET_KEY = "" # private\r\nGALIA_USER_ID=\'\'\r\n SUPABASE_URL = \r\n';
+  const valid = ' export MOCKLAB_PROJECTS_URL = "" # public endpoint\r\n MOCKLAB_USER_ID=\'\'\r\n';
   assert.equal(environmentExampleIssue(valid), null);
-  const canonical = 'SUPABASE_URL=\nGALIA_USER_ID=\nSUPABASE_SECRET_KEY=\n';
+  const canonical = 'MOCKLAB_PROJECTS_URL=\nMOCKLAB_USER_ID=\n';
   assert.equal(environmentExampleIssue(canonical), null);
   for (const [source, issue] of [
-    [canonical.replace('SUPABASE_URL=', 'SUPABASE_URL=DO_NOT_DISCLOSE'), 'nonempty values'],
-    [canonical.replace('GALIA_USER_ID=\n', ''), 'missing keys'],
+    [canonical.replace('MOCKLAB_PROJECTS_URL=', 'MOCKLAB_PROJECTS_URL=DO_NOT_DISCLOSE'), 'nonempty values'],
+    [canonical.replace('MOCKLAB_USER_ID=\n', ''), 'missing keys'],
+    ['GALIA_PROJECTS_URL=\nGALIA_USER_ID=\n', 'missing keys'],
+    [canonical + 'GALIA_PROJECTS_URL=\nGALIA_USER_ID=\n', 'extra keys'],
     [canonical + 'UNKNOWN_DO_NOT_DISCLOSE=\n', 'extra keys'],
+    [canonical + 'SUPABASE_SECRET_KEY=\n', 'extra keys'],
   ]) {
     assert.equal(environmentExampleIssue(source), issue);
     assert.ok(!String(environmentExampleIssue(source)).includes('DO_NOT_DISCLOSE'));

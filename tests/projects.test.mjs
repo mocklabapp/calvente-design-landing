@@ -1,122 +1,139 @@
+// @ts-check
 import assert from 'node:assert/strict';
-import { registerHooks } from 'node:module';
 import test from 'node:test';
+import { configuration, reads } from './helpers/projects-loader.mjs';
 
-// Only replace Astro's environment bridge; production uses astro:env/server.
-registerHooks({ resolve(specifier, context, next) {
-  if (specifier === 'astro:env/server') return { shortCircuit: true,
-    url: 'data:text/javascript,export const getSecret = (name) => process.env[name];' };
-  return next(specifier, context);
-} });
 const { getProjects } = await import('../src/lib/projects.ts');
 const { GET } = await import('../src/pages/api/projects.json.ts');
 const owner = '12345678-1234-4234-8234-123456789abc';
-const key = 'fixture-secret-not-real';
-const row = (id = '9007199254740993') => ({ id, user: owner, title: 'Public',
-  description: null, weblink: null, project_translation_settings: null,
-  prompt: 'PRIVATE', nas_folder: 'PRIVATE' });
-const response = (rows, total = rows.length, start = 0) => new Response(JSON.stringify(rows), {
-  headers: { 'content-range': rows.length ? `${start}-${start + rows.length - 1}/${total}` : `*/${total}` },
-});
+const endpoint = 'https://abcdefghijklmnopqrst.supabase.co/functions/v1/public-projects';
+/** @param {string} [id] */
+const row = (id = '9007199254740993') => ({ id, title: 'Public',
+  description: null, weblink: null, originalLanguage: null, translations: [] });
+/** @param {unknown[]} projects */
+const response = (projects) => Response.json({ projects });
+/** Invoke the public route with visitor input, without fabricating Astro internals.
+ * @param {string} [query]
+ */
+async function request(query = '') {
+  /** @type {unknown} */
+  const result = await Reflect.apply(GET, undefined, [{
+    request: new Request(`https://site.test/api/projects.json${query}`),
+  }]);
+  assert.ok(result instanceof Response);
+  return result;
+}
 const originalFetch = globalThis.fetch;
 test.beforeEach(() => {
-  process.env.SUPABASE_URL = 'https://mygqfdbloqojffhsurgo.supabase.co';
-  process.env.SUPABASE_SECRET_KEY = key;
-  process.env.GALIA_USER_ID = owner;
+  for (const name of Object.keys(configuration)) delete configuration[name];
+  configuration.MOCKLAB_PROJECTS_URL = endpoint;
+  configuration.MOCKLAB_USER_ID = owner;
+  reads.length = 0;
 });
 test.afterEach(() => { globalThis.fetch = originalFetch; });
 
-test('fixed owner, allowlist, nested relation and no state filter; partial translations survive', async () => {
-  globalThis.fetch = async (url, options) => {
-    assert.equal(url.searchParams.get('user'), `eq.${owner}`);
-    assert.equal(url.searchParams.has('state'), false);
-    assert.equal(url.searchParams.get('order'), 'id.asc');
-    assert.match(url.searchParams.get('select'), /id::text/);
-    assert.match(url.searchParams.get('select'), /project_translation_settings\(original_language,project_translations\(language,title,description\)\)/);
-    assert.doesNotMatch(url.searchParams.get('select'), /\*|prompt|nas_folder/);
-    assert.equal(options.redirect, 'error');
-    assert.equal(options.cache, 'no-store');
-    assert.ok(options.signal instanceof AbortSignal);
-    assert.equal(options.headers.apikey, key);
-    return response([{ ...row(), project_translation_settings: { original_language: 'ca',
-      project_translations: [{ language: 'en', title: null, description: 'Partial', prompt: 'PRIVATE' }] } },
-    row('9007199254740994')]);
+test('getProjects reads only MOCKLAB public URL and UID for a credential-free GET and preserves the DTO', async () => {
+  globalThis.fetch = async (input, options) => {
+    const url = new URL(input instanceof Request ? input.url : input);
+    assert.equal(url.href, `${endpoint}?uid=${owner}`);
+    assert.equal(options?.method, 'GET');
+    assert.equal(options?.redirect, 'error');
+    assert.equal(options?.cache, 'no-store');
+    assert.ok(options?.signal instanceof AbortSignal);
+    assert.deepEqual([...new Headers(options?.headers)], []);
+    assert.equal(options?.body, undefined);
+    return response([{ ...row(), state: 'draft', prompt: 'PRIVATE', originalLanguage: 'ca',
+      translations: [{ language: 'en', title: null, description: 'Partial', prompt: 'PRIVATE' }] },
+    { ...row('9223372036854775807'), state: 'published', nas_folder: 'PRIVATE' }]);
   };
   const result = await getProjects();
-  assert.deepEqual(result, [{ id: '9007199254740993', title: 'Public', description: null, weblink: null,
-    originalLanguage: 'ca', translations: [{ language: 'en', title: null, description: 'Partial' }] },
-  { id: '9007199254740994', title: 'Public', description: null, weblink: null,
-    originalLanguage: null, translations: [] }]);
+  assert.deepEqual(result, [{ ...row(), originalLanguage: 'ca',
+    translations: [{ language: 'en', title: null, description: 'Partial' }] },
+  row('9223372036854775807')]);
+  assert.deepEqual(reads, ['MOCKLAB_PROJECTS_URL', 'MOCKLAB_USER_ID']);
 });
 
-test('pagination follows actual rows returned even with a lower upstream cap', async () => {
+test('runtime URL and owner are read again per call, without a secret fallback', async () => {
   let calls = 0;
-  globalThis.fetch = async (url) => {
-    assert.equal(url.searchParams.get('offset'), String(calls));
+  globalThis.fetch = async (input) => {
+    const url = new URL(input instanceof Request ? input.url : input);
+    assert.equal(url.origin + url.pathname, configuration.MOCKLAB_PROJECTS_URL);
+    assert.equal(url.searchParams.get('uid'), configuration.MOCKLAB_USER_ID?.toLowerCase());
     calls++;
-    return response([row(String(calls))], 3, calls - 1);
+    return response([]);
   };
-  assert.equal((await getProjects()).length, 3);
-  assert.equal(calls, 3);
-});
-
-test('empty portfolio is valid', async () => {
-  globalThis.fetch = async () => response([], 0);
   assert.deepEqual(await getProjects(), []);
+  configuration.MOCKLAB_PROJECTS_URL = endpoint.replace('abcdefghijklmnopqrst', 'tsrqponmlkjihgfedcba');
+  configuration.MOCKLAB_USER_ID = 'AAAAAAAA-AAAA-AAAA-AAAA-AAAAAAAAAAAA';
+  assert.deepEqual(await getProjects(), []);
+  delete configuration.MOCKLAB_PROJECTS_URL;
+  configuration.SUPABASE_URL = 'https://abcdefghijklmnopqrst.supabase.co';
+  configuration.SUPABASE_SECRET_KEY = 'fixture-obsolete-key';
+  await assert.rejects(getProjects(), { message: 'Projects unavailable' });
+  assert.equal(calls, 2);
+  assert.deepEqual(reads, Array(3).fill(['MOCKLAB_PROJECTS_URL', 'MOCKLAB_USER_ID']).flat());
 });
 
-test('configuration fails before sending credentials to unsafe URLs or invalid owners', async () => {
+test('old GALIA variables alone cannot configure getProjects', async () => {
+  delete configuration.MOCKLAB_PROJECTS_URL;
+  delete configuration.MOCKLAB_USER_ID;
+  configuration.GALIA_PROJECTS_URL = endpoint;
+  configuration.GALIA_USER_ID = owner;
   let calls = 0;
-  globalThis.fetch = async () => { calls++; throw new Error(key); };
-  for (const url of ['http://mygqfdbloqojffhsurgo.supabase.co', 'https://evil.test',
-    'https://mygqfdbloqojffhsurgo.supabase.co@evil.test',
-    'https://mygqfdbloqojffhsurgo.supabase.co/path',
-    'https://mygqfdbloqojffhsurgo.supabase.co?key=x']) {
-    process.env.SUPABASE_URL = url;
-    await assert.rejects(getProjects(), /Projects unavailable/);
+  globalThis.fetch = async () => { calls++; return response([]); };
+  await assert.rejects(getProjects(), { message: 'Projects unavailable' });
+  assert.equal(calls, 0);
+  assert.deepEqual(reads, ['MOCKLAB_PROJECTS_URL', 'MOCKLAB_USER_ID']);
+});
+
+test('invalid public configuration fails before fetching', async () => {
+  let calls = 0;
+  globalThis.fetch = async () => { calls++; throw new Error('PRIVATE'); };
+  for (const url of [undefined, 'https://evil.test', `${endpoint}?uid=other`, `${endpoint}/`]) {
+    configuration.MOCKLAB_PROJECTS_URL = url;
+    await assert.rejects(getProjects(), { message: 'Projects unavailable' });
   }
-  process.env.SUPABASE_URL = 'https://mygqfdbloqojffhsurgo.supabase.co';
-  process.env.GALIA_USER_ID = 'invalid';
-  await assert.rejects(getProjects(), /Projects unavailable/);
+  configuration.MOCKLAB_PROJECTS_URL = endpoint;
+  configuration.MOCKLAB_USER_ID = 'invalid';
+  await assert.rejects(getProjects(), { message: 'Projects unavailable' });
   assert.equal(calls, 0);
 });
 
-test('public endpoint ignores caller overrides and re-fetches with no-store on every request', async () => {
+test('public endpoint ignores visitor overrides and fetches fresh data with no-store', async () => {
   let calls = 0;
-  globalThis.fetch = async (url) => {
-    assert.equal(url.searchParams.get('user'), `eq.${owner}`);
+  globalThis.fetch = async (input) => {
+    assert.equal(String(input), `${endpoint}?uid=${owner}`);
     return response([{ ...row(), title: `Version ${++calls}` }]);
   };
   for (let i = 1; i <= 2; i++) {
-    const res = await GET({ request: new Request('https://site.test/api/projects.json?user=other&key=evil') });
+    const res = await request('?uid=other&user=other&MOCKLAB_PROJECTS_URL=https://evil.test&key=evil');
     assert.equal(res.status, 200);
     for (const header of ['cache-control', 'cdn-cache-control', 'vercel-cdn-cache-control']) {
-      assert.match(res.headers.get(header), /no-store/);
+      assert.equal(res.headers.get(header), 'no-store');
     }
-    assert.equal((await res.json()).projects[0].title, `Version ${i}`);
+    assert.deepEqual(await res.json(), { projects: [{ ...row(), title: `Version ${i}` }] });
   }
 });
 
-test('errors, malformed data and foreign owners fail closed without upstream details', async () => {
+test('errors and malformed public data fail closed without upstream details', async () => {
   for (const upstream of [
-    async () => { throw new Error(key); },
-    async () => new Response(key, { status: 403 }),
+    async () => { throw new Error('PRIVATE'); },
+    async () => new Response('PRIVATE', { status: 403 }),
     async () => new Response('', { status: 302, headers: { location: 'https://evil.test' } }),
-    async () => response([{ ...row(), user: 'other' }]),
     async () => response([{ ...row(), id: 9007199254740992 }]),
     async () => response([{ ...row(), title: {} }]),
-    async () => response([{ ...row(), project_translation_settings: [] }]),
+    async () => response([{ ...row(), translations: {} }]),
     async () => new Response('{broken'),
-    async () => response([], 10),
-    async () => new Response('[]'),
+    async () => Response.json([]),
   ]) {
     globalThis.fetch = upstream;
-    const res = await GET({});
+    const res = await request();
     assert.equal(res.status, 503);
-    assert.equal(res.headers.get('cache-control'), 'no-store');
+    for (const header of ['cache-control', 'cdn-cache-control', 'vercel-cdn-cache-control']) {
+      assert.equal(res.headers.get(header), 'no-store');
+    }
     assert.deepEqual(await res.json(), { error: 'Projects unavailable' });
   }
-  delete process.env.SUPABASE_SECRET_KEY;
-  const res = await GET({});
-  assert.equal(res.status, 503);
+  delete configuration.MOCKLAB_USER_ID;
+  assert.equal((await request()).status, 503);
 });
