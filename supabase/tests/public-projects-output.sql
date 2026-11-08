@@ -6,7 +6,7 @@ DECLARE
   expected jsonb := '{"total":"3","count":2,"offset":0,"limit":2,"projects":[
     {"id":"1","title":"Draft","description":null,"weblink":null,"originalLanguage":"es",
      "category":"Architecture","year":"2024–2025","images":[
-       {"url":"https://abcdefghijklmnopqrst.supabase.co/storage/v1/object/public/projects-images/second%20photo.jpg"},
+       {"url":"https://abcdefghijklmnopqrst.supabase.co/storage/v1/object/public/user-media/second%20photo.jpg"},
        {"url":"https://abcdefghijklmnopqrst.supabase.co/storage/v1/object/public/projects-images/first.jpg"}],
      "translations":[{"language":"ca","title":"Català","description":null},
                      {"language":"en","title":null,"description":"Partial"}]},

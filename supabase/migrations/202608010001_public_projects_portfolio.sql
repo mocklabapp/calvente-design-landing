@@ -34,9 +34,10 @@ BEGIN
   END IF;
   -- Validate the selected page before projection. SQL NULL means no images;
   -- JSON null, nonarrays and invalid entries must not become empty/partial success.
+  -- Normalize jsonb[] (hosted schema) or jsonb without changing the stored type.
   -- STABLE keeps both reads on the calling statement's snapshot.
   FOR images IN
-    SELECT p.image_data FROM public.projects p WHERE p."user" = p_owner
+    SELECT to_jsonb(p.image_data) FROM public.projects p WHERE p."user" = p_owner
     ORDER BY p.id LIMIT p_limit OFFSET p_offset
   LOOP
     IF images IS NULL THEN CONTINUE; END IF;
@@ -64,7 +65,7 @@ BEGIN
       'category', p.category, 'year', p.year,
       'images', COALESCE((
         SELECT jsonb_agg(jsonb_build_object('url', i.value ->> 'url') ORDER BY i.ordinality)
-        FROM jsonb_array_elements(p.image_data) WITH ORDINALITY AS i(value, ordinality)
+        FROM jsonb_array_elements(to_jsonb(p.image_data)) WITH ORDINALITY AS i(value, ordinality)
       ), '[]'::jsonb),
       'originalLanguage', s.original_language,
       'translations', COALESCE((

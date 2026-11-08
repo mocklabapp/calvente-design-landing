@@ -6,10 +6,13 @@ const unavailable = () => new Error('Projects unavailable');
 
 /** Keep in parity with the site's project-images.ts without crossing deployment roots. */
 function imageUrl(value: unknown, origin: string): string {
-  const prefix = `${origin}/storage/v1/object/public/projects-images/`;
   if (!/^https:\/\/[a-z0-9]{20}\.supabase\.co$/.test(origin)
-    || typeof value !== 'string' || !value.startsWith(prefix)
+    || typeof value !== 'string'
     || /[\u0000-\u0020\u007f\\?#]/.test(value)) throw unavailable();
+  const prefix = ['projects-images', 'user-media']
+    .map((bucket) => `${origin}/storage/v1/object/public/${bucket}/`)
+    .find((candidate) => value.startsWith(candidate));
+  if (!prefix) throw unavailable();
   const path = value.slice(prefix.length);
   if (!path || path.endsWith('/')) throw unavailable();
   // Inspect before URL normalization can erase dot segments. Decode object names,

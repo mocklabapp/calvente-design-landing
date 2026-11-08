@@ -157,7 +157,9 @@ try {
     assert.equal(columns, 'category,description,id,image_data,title,user,weblink,year');
     assert.equal(success("SELECT has_table_privilege('public_projects_export_owner', 'public.projects', 'SELECT')").trim(), 'f');
   });
-  test('malformed jsonb fails before projection and never drops invalid images', () => {
+  test('source remains jsonb[]; malformed elements fail without dropping images', () => {
+    assert.equal(success(`SELECT udt_name FROM information_schema.columns
+      WHERE table_schema='public' AND table_name='projects' AND column_name='image_data'`).trim(), '_jsonb');
     success(source('supabase/tests/public-projects-images.sql'));
     assert.equal(success(snapshot), before);
   });

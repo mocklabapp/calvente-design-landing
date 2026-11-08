@@ -31,7 +31,8 @@ const boundaries = [['site', site], ['Edge', edge]];
 for (const [boundary, read] of boundaries) {
   test(`${boundary}: ordered images and nullable text are projected without internal fields`, async () => {
     const images = [
-      { url: `${prefix}owner/second%20image.jpg`, status: 'pending', processingResult: { timestamps: 'PRIVATE' } },
+      { url: `${origin}/storage/v1/object/public/user-media/owner/second%20image.jpg`,
+        status: 'pending', processingResult: { timestamps: 'PRIVATE' } },
       { url: `${prefix}owner/first.jpg`, status: 'done', prompt: 'PRIVATE' },
     ];
     const result = await read([{ ...legacy, images, category: 'Architecture', year: '2024–2025',
@@ -78,16 +79,27 @@ for (const [boundary, read] of boundaries) {
     prefix.replace('https://', 'https://user:PRIVATE@') + 'photo.jpg',
     prefix.replace('.co/', '.co.evil.test/') + 'photo.jpg',
   ];
-  for (const [index, url] of unsafe.entries()) {
-    test(`${boundary}: unsafe image URL ${index} fails rather than dropping an image`, async () => {
-      await assert.rejects(read([{ ...legacy, images: [{ url: `${prefix}valid.jpg` }, { url }] }]), sanitized);
+  for (const bucket of ['projects-images', 'user-media']) {
+    for (const [index, candidate] of unsafe.entries()) {
+      const url = candidate.replace('/projects-images/', `/${bucket}/`);
+      test(`${boundary}: ${bucket} unsafe image URL ${index} fails rather than dropping an image`, async () => {
+        await assert.rejects(read([{ ...legacy, images: [{ url: `${prefix}valid.jpg` }, { url }] }]), sanitized);
+      });
+    }
+  }
+
+  for (const bucket of ['user-media-private', 'user-media-extra', 'arbitrary']) {
+    test(`${boundary}: rejects unapproved bucket ${bucket}`, async () => {
+      const url = `${origin}/storage/v1/object/public/${bucket}/photo.jpg`;
+      await assert.rejects(read([{ ...legacy, images: [{ url }] }]), sanitized);
     });
   }
 
   test(`${boundary}: valid encoded object names remain intact`, async () => {
-    const images = ['caf%C3%A9%20front.jpg', '100%25.jpg', 'a%23b%3Fc.jpg',
-      'owner%2Fphoto.jpg', '%E6%97%A5%E6%9C%AC.jpg', 'photo..jpg']
-      .map((name) => ({ url: prefix + name }));
+    const images = ['projects-images', 'user-media'].flatMap((bucket) =>
+      ['caf%C3%A9%20front.jpg', '100%25.jpg', 'a%23b%3Fc.jpg',
+        'owner%2Fphoto.jpg', '%E6%97%A5%E6%9C%AC.jpg', 'photo..jpg']
+        .map((name) => ({ url: `${origin}/storage/v1/object/public/${bucket}/${name}` })));
     assert.deepEqual(await read([{ ...legacy, images }]), [{ ...legacy, ...defaults, images }]);
   });
 }
@@ -101,7 +113,8 @@ test('Edge rejects an invalid later page without exposing the valid first page',
 
 test('each boundary derives image trust from its configured Supabase origin', async () => {
   const other = 'https://tsrqponmlkjihgfedcba.supabase.co';
-  const value = { ...legacy, images: [{ url: `${other}/storage/v1/object/public/projects-images/photo.jpg` }] };
+  const value = { ...legacy, images: ['projects-images', 'user-media']
+    .map((bucket) => ({ url: `${other}/storage/v1/object/public/${bucket}/photo.jpg` })) };
   const result = await readPublicProjects(owner, { ...config, SUPABASE_URL: `${other}/` }, fixture([page([value])]));
   assert.deepEqual(result, [{ ...value, category: null, year: null }]);
   assert.deepEqual(await fetchPublicProjects(`${other}/functions/v1/public-projects`, owner, {

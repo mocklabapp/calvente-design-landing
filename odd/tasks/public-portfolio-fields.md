@@ -1,6 +1,6 @@
 # Public portfolio fields
 Extend the reusable public project DTO locally with images, category and year.
-Remote rollout is excluded. Risk: item 2 (public-data projection and restricted SQL grants).
+Authorized rollout: galia_dev / mygqfdbloqojffhsurgo, successor migration and public-projects only. Risk: items 2 and 5 (public-data grants and shared-service deployment).
 
 ## Specs
 - S1: "Ampliar el contrato público reutilizable para proporcionar los datos necesarios del portfolio, manteniendo compatibilidad con los consumidores existentes y sin exponer filas completas ni información interna."
@@ -12,10 +12,16 @@ Remote rollout is excluded. Risk: item 2 (public-data projection and restricted 
 - S7: "No despliegues, apliques migraciones remotas ni cambies permisos o secretos sin autorización específica."
 - S8: "No deduzcas el idioma del texto ni introduzcas un fallback silencioso."
 
+- S9: "Si, procede de una vez y acabemos con esto" — accepts the immediately preceding proposal to apply the new migration and deploy public-projects in galia_dev (mygqfdbloqojffhsurgo), with schema/recovery checks and hosted response verification. No secret or website deployments.
+
 ## Tasks
 - T1 [done] S1-S8 | route: bounded writer (parent context backstop) | commit: 2ff8c751463d961e91a58937ede258e113796feb | implement additive contract, fixtures/tests and documentation
 - T2 [done] S1-S8 | route: independent verifier (risk item 2) + local validate and SQL checks | commit: 2ff8c751463d961e91a58937ede258e113796feb
 - T3 [done] S1-S8 | route: parent native review and local work-unit commit | commit: 2ff8c751463d961e91a58937ede258e113796feb
+
+- T4 [done] S4-S9 | route: parent remote preflight + bounded read-only explorer | commit: pending | confirm target/schema, preserve rollback artifact, validate live data compatibility
+- T5 [in_progress] S4-S9 | route: parent authorized remote migration and Edge deployment | commit: pending
+- T6 [pending] S4-S9 | route: parent hosted checks and evidence review | commit: pending
 
 ## Log
 ### L1 Original request (verbatim)
@@ -117,3 +123,15 @@ Full validate exit 0: Astro 0 errors/warnings (2 existing bigint fixture hints),
 ### L7 Close and slice boundary
 Local work-unit commit: 2ff8c751463d961e91a58937ede258e113796feb on feat/public-portfolio-fields. One cohesive end-to-end data contract slice: 594 authored diff lines including approximately 115 tracking lines; implementation/tests/docs approximately 479. This exceeds the approximate 400-line target; no code was compressed or tests dropped. Delivery strategy: retain this local cohesive unit; no push/PR/merge authorized. The next commit only records verification/closure, not additional behavior.
 Native review consent declined for this exact candidate; lineage_created false, no authority mutation. Outside-view review is skipped, not approved. Independent security verification and local checks completed as L6 records. Risk: item 2 (public-data boundary and SQL column grants). No remote migration, deployment, permission or secret changes. New migration remains local; operational rollout requires separate human authorization. URL validation does not establish image existence or usage rights. RED provenance limitation remains disclosed.
+
+### L8 Remote rollout authorization
+Human: "necesito que esto funcione ya, es desesperante"
+Accepted proposal: "¿Autorizas aplicar la migración nueva y desplegar public-projects en galia_dev (mygqfdbloqojffhsurgo), el proyecto de las imágenes que compartiste?" Scope includes schema/recovery preflight and real-response verification, not secrets or websites.
+Human authorization (verbatim): "Si, procede de una vez y acabemos con esto"
+Runtime target evidence: existing public-projects ID e01e10b4-d2c9-4dbc-87d1-814bb77327cf, ACTIVE version 3, verify_jwt false, entrypoint identifies mygqfdbloqojffhsurgo, deployment hash matches historical cc21dadec1b5b015554af1d0c87ed29655edc8811126536af47d134749f06910. Successor migration absent from remote migration ledger. No remote mutation yet.
+
+### L9 Remote preflight discovers actual storage shape
+Read-only remote schema proves image_data is PostgreSQL jsonb[] (_jsonb), not jsonb as originally described. category/year are nullable text; server is PostgreSQL15.8. Initial aggregate query failed with 42883 before any mutation. 357 projects contain 2352 image entries: 361 under public projects-images and 1991 under public user-media, all same authorized Supabase origin. Both buckets public=true. Approved owner's 185 images use user-media. No malformed elements, raw query/fragment or other origins/path classes observed. Correct the un-applied successor to normalize with to_jsonb and allow only these two evidenced public buckets at both validators. No stored-data/type mutation, no new DTO fields or private exposure. This correction is required to safely execute S9, not a change of product scope. Source-only old Edge deployment and exact SQL definition/ACL/grants backed up under .git/portfolio-rollout-backup; no credentials or project payloads saved.
+
+### L10 Corrected rollout readiness
+Parent-observed RED: SQL72/75 (3 failures22P02 on actual jsonb[]), Node127/132 (5 expected user-media acceptance failures). GREEN: SQL75/75, full validate351/351 with zero errors/warnings (2 existing hints), explicit strict tsc exit0. Independent local verifier PASS S1-S8/readiness S9, focused246/246. Both RED logs inspected. Scope: to_jsonb normalization at validation/projection reads, exact two public buckets at both validators; no stored schema/data conversion. Native assess reviewDue=false under_budget; no extra review started. Original historical migration remains unchanged. Recovery closure5 files validated against historical source; exact RPC definition, ACL and grants retained in local .git backup. Parent pre-deployment hosted8/8 passed and legacy response digest stored without customer payloads. Ready for authorized T5.

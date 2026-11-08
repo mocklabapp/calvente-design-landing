@@ -4,15 +4,17 @@ BEGIN;
 DO $$
 DECLARE
   invalid jsonb;
-  saved jsonb := (SELECT image_data FROM public.projects WHERE id = 1);
+  saved jsonb[] := (SELECT image_data FROM public.projects WHERE id = 1);
 BEGIN
   FOREACH invalid IN ARRAY ARRAY[
-    'null'::jsonb, '{}'::jsonb, '"private"'::jsonb,
-    '[null]'::jsonb, '[[]]'::jsonb, '[{}]'::jsonb,
-    '[{"url":null}]'::jsonb, '[{"url":123}]'::jsonb, '[{"url":""}]'::jsonb,
-    '[{"url":"https://abcdefghijklmnopqrst.supabase.co/storage/v1/object/public/projects-images/valid.jpg"},{}]'::jsonb
+    NULL::jsonb, 'null'::jsonb, '{}'::jsonb, '"private"'::jsonb, '123'::jsonb,
+    '[]'::jsonb, '{"url":null}'::jsonb, '{"url":123}'::jsonb, '{"url":""}'::jsonb
   ] LOOP
-    UPDATE public.projects SET image_data = invalid WHERE id = 1;
+    -- A SQL array cannot hold a top-level scalar; reject malformed elements,
+    -- including SQL NULL and JSON null, even after a valid image.
+    UPDATE public.projects SET image_data = ARRAY[
+      '{"url":"https://abcdefghijklmnopqrst.supabase.co/storage/v1/object/public/user-media/valid.jpg"}'::jsonb,
+      invalid] WHERE id = 1;
     BEGIN
       PERFORM public.export_public_projects('11111111-1111-1111-1111-111111111111', 0, 200);
       RAISE EXCEPTION 'Invalid image_data was accepted';
