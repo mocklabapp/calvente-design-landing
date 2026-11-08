@@ -1,9 +1,10 @@
-import { hasRole, parsePage, unavailable, type PublicProject } from './validation.ts';
+import { hasRole, infrastructureKey, parsePage, unavailable, type PublicProject } from './validation.ts';
 export type { PublicProject } from './validation.ts';
 
 export interface ReaderConfig {
   SUPABASE_URL: string | undefined;
   SUPABASE_ANON_KEY: string | undefined;
+  SUPABASE_PUBLISHABLE_KEYS?: string | undefined;
   PUBLIC_PROJECTS_ROLE_JWT: string | undefined;
 }
 
@@ -19,10 +20,11 @@ export async function readPublicProjects(
   dependencies: ReaderDependencies = { fetch },
 ): Promise<PublicProject[]> {
   try {
-    const { SUPABASE_URL: base, SUPABASE_ANON_KEY: key, PUBLIC_PROJECTS_ROLE_JWT: token } = config;
+    const { SUPABASE_URL: base, PUBLIC_PROJECTS_ROLE_JWT: token } = config;
+    const key = infrastructureKey(config.SUPABASE_PUBLISHABLE_KEYS, config.SUPABASE_ANON_KEY);
     if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(uid)
       || !base || !/^https:\/\/[a-z0-9]{20}\.supabase\.co\/?$/.test(base)
-      || !hasRole(key, 'anon') || !hasRole(token, 'public_projects_runtime')) throw unavailable();
+      || !hasRole(token, 'public_projects_runtime')) throw unavailable();
     const owner = uid.toLowerCase();
     const signal = (dependencies.timeout ?? AbortSignal.timeout)(10_000);
     const projects: PublicProject[] = [];

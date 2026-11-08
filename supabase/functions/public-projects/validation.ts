@@ -55,6 +55,20 @@ export function parsePage(value: unknown, offset: number) {
   return { total: Number(row.total), projects: row.projects.map((item: unknown) => project(item)) };
 }
 
+/** An explicit publishable dictionary must be valid; only absence permits legacy fallback. */
+export function infrastructureKey(publishableKeys: string | undefined, legacyKey: string | undefined): string {
+  if (publishableKeys === undefined) {
+    if (!hasRole(legacyKey, 'anon')) throw unavailable();
+    return legacyKey;
+  }
+  const decoded: unknown = JSON.parse(publishableKeys);
+  const key = record(decoded).default;
+  const prefix = 'sb_publishable_';
+  if (typeof key !== 'string' || !key.startsWith(prefix) || key.length === prefix.length
+    || /[^A-Za-z0-9_-]/.test(key)) throw unavailable();
+  return key;
+}
+
 /** Claim checks prevent accidental privileged-key configuration; PostgREST verifies signatures. */
 export function hasRole(token: string | undefined, role: string): token is string {
   if (!token || !/^[\w-]+\.[\w-]+\.[\w-]+$/.test(token)) return false;

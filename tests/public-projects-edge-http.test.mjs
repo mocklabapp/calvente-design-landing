@@ -127,14 +127,15 @@ test('upstream failures and invalid data discard partial output and hide details
   }
 });
 
-test('native entry registers once and reads only the three runtime keys per valid GET (fake Deno)', async (t) => {
+test('native entry reads fresh infrastructure keys and restricted bearer per valid GET (fake Deno)', async (t) => {
   const previous = Object.getOwnPropertyDescriptor(globalThis, 'Deno');
   /** @type {((request: Request) => Response | Promise<Response>)[]} */
   const handlers = [];
   /** @type {string[]} */
   const reads = [];
   const values = new Map(Object.entries(config));
-  const rpc = fixture([page([]), page([project()])]);
+  const publishable = 'sb_publishable_FAKE_entry_0123456789-abcdefghijk';
+  const rpc = fixture([page([]), page([project()]), page([])]);
   t.mock.method(globalThis, 'fetch', rpc.fetch);
   Object.defineProperty(globalThis, 'Deno', { configurable: true, value: {
     env: {
@@ -153,11 +154,26 @@ test('native entry registers once and reads only the three runtime keys per vali
     await check(await handler(request('')), 400, { error: 'Invalid query' });
     assert.deepEqual(reads, []);
     await check(await handler(request()), 200, { projects: [] });
-    await check(await handler(request()), 200, { projects: [project()] });
+    assert.equal(rpc.calls[0].headers.get('apikey'), config.SUPABASE_ANON_KEY);
+    values.set('SUPABASE_PUBLISHABLE_KEYS', JSON.stringify({ default: publishable }));
+    values.delete('SUPABASE_ANON_KEY');
+    const published = await handler(request());
+    assert.equal(JSON.stringify([...published.headers]).includes(publishable), false);
+    await check(published, 200, { projects: [project()] });
+    assert.equal(rpc.calls[1].headers.get('apikey'), publishable);
+    assert.equal(rpc.calls[1].headers.get('authorization'), `Bearer ${config.PUBLIC_PROJECTS_ROLE_JWT}`);
+    values.set('SUPABASE_ANON_KEY', config.SUPABASE_ANON_KEY);
+    values.set('SUPABASE_PUBLISHABLE_KEYS', '{}');
+    await check(await handler(request()), 503, { error: 'Projects unavailable' });
+    values.delete('SUPABASE_PUBLISHABLE_KEYS');
+    await check(await handler(request()), 200, { projects: [] });
+    assert.equal(rpc.calls[2].headers.get('apikey'), config.SUPABASE_ANON_KEY);
+    values.set('SUPABASE_PUBLISHABLE_KEYS', JSON.stringify({ default: publishable }));
     values.delete('PUBLIC_PROJECTS_ROLE_JWT');
     await check(await handler(request()), 503, { error: 'Projects unavailable' });
-    assert.deepEqual(reads, Array.from({ length: 3 }, () => Object.keys(config)).flat());
-    assert.equal(rpc.calls.length, 2);
+    const keys = ['SUPABASE_URL', 'SUPABASE_ANON_KEY', 'SUPABASE_PUBLISHABLE_KEYS', 'PUBLIC_PROJECTS_ROLE_JWT'];
+    assert.deepEqual(reads, Array.from({ length: 5 }, () => keys).flat());
+    assert.equal(rpc.calls.length, 3);
   } finally {
     if (previous) Object.defineProperty(globalThis, 'Deno', previous);
     else Reflect.deleteProperty(globalThis, 'Deno');
