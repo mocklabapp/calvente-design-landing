@@ -1,10 +1,26 @@
 # Public projects Edge Function
 
-**Local portfolio extension (not deployed):** the current source adds ordered URL-only `images` and nullable text `category`/`year`. It requires the separately authorized successor SQL migration and Edge rollout. All deployment evidence below describes the historical R1 contract, not these new fields.
+**Portfolio extension deployed:** `public-projects` version 4 is ACTIVE on `galia_dev` / `mygqfdbloqojffhsurgo`, returning ordered URL-only `images` and nullable text `category`/`year`. The separately authorized successor migration is installed. Current evidence is in [Portfolio rollout](#portfolio-rollout); the R1 record below remains historical.
 
-**R1/T4 is Completed / verified** for the authorized implementation and Edge deployment. The shared `public-projects` function exposes public owner-selected projects without caller authentication or site keys. Version 1 is active on the approved project; the parent verified a populated read through the actual Astro client: HTTP 200, 22 projects, 0 translations, public-field allowlist and no-store/CORS checks passed. Live translations/multipage cases, other-app functional checks and Vercel deployment were not exercised.
+**R1/T4 is Completed / verified** for the authorized implementation and Edge deployment. The shared `public-projects` function exposes public owner-selected projects without caller authentication or site keys. Historical version 1 was active on the approved project; the parent verified a populated read through the actual Astro client: HTTP 200, 22 projects, 0 translations, public-field allowlist and no-store/CORS checks passed. Live translations/multipage cases, other-app functional checks and Vercel deployment were not exercised.
 
 T2 supplies the reader/HTTP adapter and native entry; T7/S10 adds publishable infrastructure key selection while preserving the restricted bearer and legacy compatibility. T3 migrated the Astro consumer: each site needs only `MOCKLAB_PROJECTS_URL` (shared endpoint) and `MOCKLAB_USER_ID` (owner UUID), never a token. See the [site configuration guide](projects.md).
+
+## Portfolio rollout
+
+The human explicitly authorized the successor migration and this function only on 2026-11-08. Source commit: `9ea92f0a3e63b0aa4bc1f44c27c3f19d03ce8342`; remote migration: `20261108215034_public_projects_portfolio`; deployment: version **4**, hash `2deae1d39a76e615c6efe112757f526b220f5240d049b5446234df8cdfb4d49c`. Six source files were uploaded; the five runtime-file readbacks match exactly (the declaration file is not returned by the deployment source API). `verify_jwt=false` is unchanged, as are the other 20 functions' metadata.
+
+Preflight discovered the actual source type is `jsonb[]`, and the referenced public images use both `projects-images` and `user-media`. Both buckets were confirmed public. The unapplied successor was corrected and tested before rollout; it normalizes with `to_jsonb` without changing the stored column type. Source-only recovery artifacts were preserved locally; no rollback or secret operation was performed.
+
+| Observed check | Result |
+| --- | --- |
+| SQL postflight | 357 projects and content digest unchanged; original RPC owner/ACL and table ACLs retained; only three added column grants; no runtime table SELECT or residual temporary privileges. |
+| Local corrected candidate | Parent-observed RED, then SQL 75/75, full validation 351/351 and strict types passed; independent local verification passed. |
+| Parent hosted HTTP before and after | Each 8/8: OPTIONS, missing/malformed/duplicate/extra query, unsupported method, empty owner and populated owner; exact error bodies, wildcard CORS and all three no-store headers. |
+| Populated public response and actual site client | 22 projects, 185 URL-only images, category/year present on all 22; exact nine-key allowlist and old-field digest unchanged. |
+| Representative public image | One HEAD returned 200 with image/jpeg. This is not exhaustive image availability or usage-rights proof. |
+
+All 22 observed projects still have unknown original language and no translations; no language inference or fallback was added. Live multipage/translation cases, other-app workflows and website/Vercel deployments were not exercised. Parent HTTP observations are not an independently executed automated hosted verification; that previously unavailable verifier was not retried. Existing websites with older client reconstructors still discard the additions until updated separately. No push, merge, website deployment, signing-key operation or secret change was performed.
 
 ## HTTP contract for consumers (T3)
 

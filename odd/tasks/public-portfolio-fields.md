@@ -19,9 +19,9 @@ Authorized rollout: galia_dev / mygqfdbloqojffhsurgo, successor migration and pu
 - T2 [done] S1-S8 | route: independent verifier (risk item 2) + local validate and SQL checks | commit: 2ff8c751463d961e91a58937ede258e113796feb
 - T3 [done] S1-S8 | route: parent native review and local work-unit commit | commit: 2ff8c751463d961e91a58937ede258e113796feb
 
-- T4 [done] S4-S9 | route: parent remote preflight + bounded read-only explorer | commit: pending | confirm target/schema, preserve rollback artifact, validate live data compatibility
-- T5 [in_progress] S4-S9 | route: parent authorized remote migration and Edge deployment | commit: pending
-- T6 [pending] S4-S9 | route: parent hosted checks and evidence review | commit: pending
+- T4 [done] S4-S9 | route: parent remote preflight + bounded read-only explorer | commit: 9ea92f0a3e63b0aa4bc1f44c27c3f19d03ce8342 | confirm target/schema, preserve rollback artifact, validate live data compatibility
+- T5 [done] S4-S9 | route: parent authorized remote migration and Edge deployment | commit: 9ea92f0a3e63b0aa4bc1f44c27c3f19d03ce8342
+- T6 [done] S4-S9 | route: parent hosted checks and evidence review | commit: 9ea92f0a3e63b0aa4bc1f44c27c3f19d03ce8342
 
 ## Log
 ### L1 Original request (verbatim)
@@ -135,3 +135,9 @@ Read-only remote schema proves image_data is PostgreSQL jsonb[] (_jsonb), not js
 
 ### L10 Corrected rollout readiness
 Parent-observed RED: SQL72/75 (3 failures22P02 on actual jsonb[]), Node127/132 (5 expected user-media acceptance failures). GREEN: SQL75/75, full validate351/351 with zero errors/warnings (2 existing hints), explicit strict tsc exit0. Independent local verifier PASS S1-S8/readiness S9, focused246/246. Both RED logs inspected. Scope: to_jsonb normalization at validation/projection reads, exact two public buckets at both validators; no stored schema/data conversion. Native assess reviewDue=false under_budget; no extra review started. Original historical migration remains unchanged. Recovery closure5 files validated against historical source; exact RPC definition, ACL and grants retained in local .git backup. Parent pre-deployment hosted8/8 passed and legacy response digest stored without customer payloads. Ready for authorized T5.
+
+### L11 Authorized remote mutation completed
+Applied only public_projects_portfolio successor (success=true), preserving historical migration. SQL postflight: 357 projects and exact content digest unchanged; original export owner/EXECUTE/table ACL retained; only category/image_data/year added column access; no runtime table SELECT or residual membership/CREATE; stored image_data remains jsonb[]. Approved owner output22projects185images with exactly nine approved keys. Deployed six-file public-projects closure from9ea92f0; ACTIVE version4, verify_jwt=false preserved, hash2deae1d39a76e615c6efe112757f526b220f5240d049b5446234df8cdfb4d49c. No secrets or websites modified. Hosted HTTP verification follows.
+
+### L12 Hosted verification and closure
+Remote migration ledger:20261108215034/public_projects_portfolio. Five deployed runtime files match local source; sixth uploaded file is runtime.d.ts. Other20 functions' metadata unchanged. Parent HTTP job6 exit0:8/8 expected cases, all three no-store headers and wildcard CORS, exact nine-field DTO. Actual fetchPublicProjects returns22projects185images; category/year nonnull on22; old six-field digest identical before/after. One representative image HEAD200 image/jpeg. All22 originalLanguage unknown,0translations; behavior unchanged. Independent verifier inspected recorded SQL/deployment/HTTP evidence and found no contradiction; this is evidence review, not independent remote execution. Live multipage/translations, other-app workflows and website deployment remain unexercised/outside scope. Updated seven local documentation links/rollout anchor validated, git diff --check clean; no functional rerun for docs-only close. Risk: items2 and5 (public projection/grants and shared-service deployment). No failed checks remain; observed RED failures were fixed; native Deno unavailable locally and unavailable automated hosted verifier not retried. No secrets, signing keys, push, merge or website deployments changed. T4-T6 complete; do not repeat applied migration/deployment. Recovery artifacts remain local under .git/portfolio-rollout-backup; no rollback executed.

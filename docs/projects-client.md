@@ -1,6 +1,6 @@
 # Public projects client and Astro activation — T3a/T3b
 
-`getProjects()` now delegates to the credential-free `fetchPublicProjects()` Edge client for R1 S1–S6. The server-only boundary is retained. The later local portfolio extension adds normalized images/category/year while preserving text-only construction compatibility; it is not deployed. This local activation does not complete R1 or authorize deployment.
+`getProjects()` now delegates to the credential-free `fetchPublicProjects()` Edge client for R1 S1–S6. The server-only boundary is retained. The portfolio extension adds normalized images/category/year while preserving text-only construction compatibility. It is deployed on the authorized shared `galia_dev` service; [hosted evidence](public-projects-edge.md#portfolio-rollout) is separate from each website's deployment, which this work does not authorize.
 
 ## Site configuration
 
@@ -20,7 +20,7 @@ No API key or Authorization header is sent and no environment variable is read b
 - One GET to the configured endpoint with only `uid`, `cache: 'no-store'`, `redirect: 'error'` and one shared ten-second abort signal. Invalid configuration fails before fetch; every call requests fresh data.
 - A successful `200 {projects: [...]}` response is treated as unknown input. The pure `projects-response.ts` parser reconstructs only `id`, nullable `title/description/weblink`, nullable `originalLanguage`, `translations` containing `language/title/description`, ordered `images` containing only `url`, and nullable text `category`/`year`. It receives the validated endpoint origin, never a host taken from the response.
 - IDs are strictly increasing, unique positive signed-bigint decimal strings, never converted to Number. Languages are `es`, `en` or `ca`; unknown original language remains null. Duplicate translation languages fail. Null/partial text stays unchanged, with no fallback or state filtering.
-- Missing legacy additions normalize to `[]`/`null`; present null images, nonarrays, malformed entries or non-text category/year reject the entire response. `project-images.ts` validates trusted-origin public `projects-images` object URLs, rejecting credentials, ports, query/fragment, signed/private paths and traversal while preserving valid encoded names. No images are silently filtered. See the [exact contract](projects.md#exact-data-contract).
+- Missing legacy additions normalize to `[]`/`null`; present null images, nonarrays, malformed entries or non-text category/year reject the entire response. `project-images.ts` validates trusted-origin public `projects-images` and `user-media` object URLs, rejecting credentials, ports, query/fragment, signed/private paths and traversal while preserving valid encoded names. No images are silently filtered. See the [exact contract](projects.md#exact-data-contract).
 - Private extras are discarded. Malformed data, upstream errors, redirects and timeouts reject with exactly `Error('Projects unavailable')`, without partial output or an upstream cause.
 - UID selects public data, not authorization. The DTO omits owner identity, so the client cannot independently recheck ownership. The configured shared service owns selection and database pagination; see the [Edge HTTP contract](public-projects-edge.md#http-contract-for-consumers-t3).
 
