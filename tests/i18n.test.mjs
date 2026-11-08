@@ -3,6 +3,11 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import test, { after } from 'node:test';
 import { fixture } from './helpers/build-fixture.mjs';
+import { site } from '../src/config/site.ts';
+
+/** @param {string} text */
+const htmlText = (text) => text.replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;');
+const renamedSite = 'Clínica Norte & Salud';
 
 const originals = ['astro.config.mjs', 'src/i18n/locales.ts', 'src/i18n/ui.ts', 'src/data/pages.ts'];
 const before = await Promise.all(originals.map((path) => readFile(new URL(`../${path}`, import.meta.url), 'utf8')));
@@ -23,14 +28,20 @@ const rejected = (result, diagnostic) => {
   assert.ok(result.output.includes(diagnostic), result.output);
 };
 const spanishOnly = fixture();
-const bilingual = fixture(enableEnglish);
+const bilingual = fixture(async (input) => {
+  await enableEnglish(input);
+  const source = await readFile(new URL('../src/config/site.ts', import.meta.url), 'utf8');
+  const nameLine = source.match(/^  name: .+,$/m)?.[0];
+  assert.ok(nameLine, 'site identity must remain an explicit shared configuration field');
+  await input.replace('src/config/site.ts', nameLine, `  name: ${JSON.stringify(renamedSite)},`);
+});
 
 test('default build publishes Spanish content and metadata', async () => {
   const result = await spanishOnly;
   success(result);
   const html = await result.html();
   assert.match(html, /<html lang="es" dir="ltr">/);
-  assert.match(html, /<h1>base-landing-mocklab<\/h1>/);
+  assert.ok(html.includes(`<h1>${htmlText(site.name)}</h1>`));
   assert.match(html, /Un punto de partida claro para tu próxima web\./);
   assert.match(html, /name="description" content="Un punto de partida claro para tu próxima web\."/);
 });
@@ -44,12 +55,13 @@ test('disabled English generates no output, selector or hreflang references', as
   assert.match(html, /rel="canonical" href="https:\/\/example.test\/"/);
 });
 
-test('opt-in English publishes translated content, UI and page metadata', async () => {
+test('renamed client build preserves opt-in English content, UI and shared identity', async () => {
   const result = await bilingual;
   success(result);
   const html = await result.html('en/index.html');
   assert.match(html, /<html lang="en" dir="ltr">/);
-  assert.match(html, /<title>base-landing-mocklab<\/title>/);
+  assert.ok(html.includes(`<title>${htmlText(renamedSite)}</title>`));
+  assert.ok(html.includes(`<h1>${htmlText(renamedSite)}</h1>`));
   assert.match(html, /name="description" content="A clear starting point for your next website\."/);
   assert.match(html, /<p>A clear starting point for your next website\.<\/p>/);
   assert.match(html, /<nav aria-label="Language navigation">/);
@@ -57,6 +69,8 @@ test('opt-in English publishes translated content, UI and page metadata', async 
   assert.match(html, /href="\/en\/" lang="en" hreflang="en" aria-current="page">English/);
   assert.match(html, /href="\/" lang="es" hreflang="es">Español/);
   const spanish = await result.html();
+  assert.ok(spanish.includes(`<title>${htmlText(renamedSite)}</title>`));
+  assert.ok(spanish.includes(`<h1>${htmlText(renamedSite)}</h1>`));
   assert.match(spanish, /aria-label="Navegación de idiomas"/);
   assert.match(spanish, /<span>Idioma<\/span>/);
 });
@@ -87,7 +101,7 @@ test('a third configured language works while English remains disabled', async (
     await replace('src/i18n/locales.ts', "= ['es'];", "= ['es', 'fr'];");
     await replace('src/i18n/ui.ts', '  en:', "  fr: { navigation: 'Navigation des langues', languageSwitcher: 'Langue' },\n  en:");
     await replace('src/data/pages.ts', '      en: {', `      fr: {
-        slug: '', title: 'base-landing-mocklab', description: 'Un point de départ clair.', body: 'Un point de départ clair.',
+        slug: '', title: site.name, description: 'Un point de départ clair.', body: 'Un point de départ clair.',
       },
       en: {`);
   });
@@ -107,7 +121,7 @@ test('registered RTL direction and HTML language reach generated markup', async 
     await replace('src/i18n/locales.ts', "= ['es'];", "= ['es', 'ar'];");
     await replace('src/i18n/ui.ts', '  en:', "  ar: { navigation: 'التنقل بين اللغات', languageSwitcher: 'اللغة' },\n  en:");
     await replace('src/data/pages.ts', '      en: {', `      ar: {
-        slug: '', title: 'base-landing-mocklab', description: 'نقطة بداية واضحة.', body: 'نقطة بداية واضحة.',
+        slug: '', title: site.name, description: 'نقطة بداية واضحة.', body: 'نقطة بداية واضحة.',
       },
       en: {`);
   });
@@ -130,8 +144,8 @@ test('translated slugs preserve page identity and omit unavailable page translat
   success(result);
   const spanish = await result.html('acerca/index.html');
   const english = await result.html('en/about/index.html');
-  assert.match(spanish, /<title>Acerca \| base-landing-mocklab<\/title>/);
-  assert.match(english, /<title>About \| base-landing-mocklab<\/title>/);
+  assert.ok(spanish.includes(`<title>Acerca | ${htmlText(site.name)}</title>`));
+  assert.ok(english.includes(`<title>About | ${htmlText(site.name)}</title>`));
   for (const html of [spanish, english]) {
     assert.match(html, /href="\/acerca\/" lang="es"/);
     assert.match(html, /href="\/en\/about\/" lang="en"/);
