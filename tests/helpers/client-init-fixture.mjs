@@ -1,7 +1,7 @@
 // @ts-check
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
-import { mkdtemp, mkdir, writeFile, readFile } from 'node:fs/promises';
+import { mkdtemp, mkdir, writeFile, readFile, realpath } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -10,7 +10,7 @@ const cli = fileURLToPath(new URL('../../scripts/init-client.mjs', import.meta.u
 
 /** Create only disposable repositories; never mutate the checkout's Git state. */
 export async function clientFixture() {
-  const scratch = await mkdtemp(join(tmpdir(), 'client-init-'));
+  const scratch = await realpath(await mkdtemp(join(tmpdir(), 'client-init-')));
   const root = join(scratch, 'starter');
   await mkdir(root);
   /** @type {NodeJS.ProcessEnv} */
@@ -40,8 +40,10 @@ export async function clientFixture() {
   git('add', '.');
   git('commit', '-m', 'fixture');
   /** @param {string[]} [args] @param {string} [input] */
-  const run = (args = [], input = '') => spawnSync(process.execPath, [cli, ...args], {
-    cwd: root, env, input, encoding: 'utf8', timeout: 10_000,
+  const run = (args = [], input = '') => runAt(root, args, input);
+  /** @param {string} cwd @param {string[]} [args] @param {string} [input] */
+  const runAt = (cwd, args = [], input = '') => spawnSync(process.execPath, [cli, ...args], {
+    cwd, env, input, encoding: 'utf8', timeout: 30_000,
   });
   const snapshot = async () => ({
     head: git('rev-parse', 'HEAD'), status: git('status', '--porcelain', '--untracked-files=all'),
@@ -49,7 +51,7 @@ export async function clientFixture() {
     identity: await Promise.all(['package.json', 'src/config/site.ts', 'docs/project-brief.md']
       .map((path) => readFile(join(root, path), 'utf8'))),
   });
-  return { root, scratch, git, run, snapshot };
+  return { root, scratch, git, run, runAt, snapshot, env };
 }
 
 export const planArgs = ['--name', 'Clínica Norte', '--slug', 'clinica-norte'];

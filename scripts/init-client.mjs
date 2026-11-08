@@ -3,8 +3,9 @@ import { createInterface } from 'node:readline';
 import { stdin, stdout } from 'node:process';
 import { defaultProjectsUrl, parseArgs, suggestSlug, validateName, validatePortfolio, validateSlug } from './client-init/input.mjs';
 import { preflight } from './client-init/preflight.mjs';
+import { apply, resume } from './client-init/apply.mjs';
 
-const help = `Client preparation — plan-only (T1)
+const help = `Client initializer — default plan-only preview
 Usage: corepack pnpm init:client [options]
 Run from the root of an existing clean GitHub starter clone. No files are changed.
 
@@ -17,8 +18,17 @@ Options (omitted identity fields are prompted):
   --help                Show help without inspecting the clone
 
 Interactive confirmation: type PLAN <slug>. EOF/refusal stops with exit 1.
-No apply mode. No backup, .env, history, remote or directory changes.
-GitHub authentication/publication, verified backup and rename are pending T2.
+Default plan-only mode: No files are changed; no backup, history or remote changes.
+Apply/resume (explicit, separate from plan confirmation):
+  --apply               Apply to this clone, with interactive safety confirmations
+  --author-name NAME    Explicit author for independent history (required with apply)
+  --author-email EMAIL  Explicit author email (required with apply)
+  --resume ABS_BACKUP   Resume only this recorded operation, from its current root
+Apply checks authenticated mocklabapp admin rights and collision before editing.
+Retained external backup, validation and HISTORY approval precede new history.
+PUBLISH approval creates a private org repository and pushes; push may deploy.
+Declining publication preserves local preparation. Vercel setup remains manual.
+See docs/client-initializer.md for recovery and supported-layout restrictions.
 `;
 
 async function main() {
@@ -34,10 +44,14 @@ async function main() {
   const ask = async (prompt) => {
     stdout.write(prompt);
     const line = await iterator.next();
-    if (line.done) throw new Error('Input ended; no changes made.');
+    if (line.done) throw new Error(args.has('--apply') || args.has('--resume')
+      ? 'Input ended; no further changes made. Inspect retained state and resume explicitly.'
+      : 'Input ended; no changes made.');
     return line.value;
   };
   try {
+    const backup = args.get('--resume');
+    if (backup !== undefined) { await resume(backup, ask); return; }
     const name = validateName(args.get('--name') ?? await ask('Client display name: '));
     const suggestion = suggestSlug(name);
     const slug = validateSlug(args.get('--slug') ?? (await ask(`Slug [${suggestion}]: `) || suggestion));
@@ -49,6 +63,7 @@ async function main() {
       url = await ask(`Public HTTPS service URL [${defaultProjectsUrl}]: `) || defaultProjectsUrl;
     }
     const portfolio = validatePortfolio(uid, url);
+    if (args.has('--apply')) { await apply({ name, slug, portfolio }, args, ask); return; }
     const plan = await preflight(process.cwd(), slug, !!portfolio);
     stdout.write(`\nPLAN ONLY — no files will change\nExisting clone: ${plan.root}\nSource commit: ${plan.source}\n`);
     stdout.write(`Display name: ${name}\nPackage/repository slug: ${slug}\nFuture private repository: mocklabapp/${slug}\n`);

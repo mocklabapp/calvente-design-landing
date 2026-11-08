@@ -3,16 +3,27 @@ export const defaultProjectsUrl = 'https://mygqfdbloqojffhsurgo.supabase.co/func
 
 /** @param {string[]} args */
 export function parseArgs(args) {
-  const allowed = ['--name', '--slug', '--uid', '--projects-url', '--confirm-plan'];
+  const allowed = ['--name', '--slug', '--uid', '--projects-url', '--confirm-plan', '--resume', '--author-name', '--author-email'];
   /** @type {Map<string, string>} */
   const values = new Map();
-  for (let i = 0; i < args.length; i += 2) {
+  for (let i = 0; i < args.length;) {
     const key = args[i];
+    if (key === '--apply' && !values.has(key)) {
+      values.set(key, 'true');
+      i += 1;
+      continue;
+    }
     const value = args[i + 1];
     if (!key || !allowed.includes(key) || values.has(key) || value === undefined || value.startsWith('--')) {
       throw new Error('Unknown, duplicate or incomplete option. Use --help; apply is not supported.');
     }
     values.set(key, value);
+    i += 2;
+  }
+  if ((values.has('--resume') && values.size !== 1) ||
+    (values.has('--apply') && values.has('--confirm-plan')) ||
+    (!values.has('--apply') && (values.has('--author-name') || values.has('--author-email')))) {
+    throw new Error('Unknown, duplicate or incomplete option combination. Use --help.');
   }
   return values;
 }
