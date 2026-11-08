@@ -1,12 +1,14 @@
 # Restricted public projects export — local T1 only
 
-This additive SQL unit covers S1/S2/S5: read-only public DTOs selected by owner UUID. It does **not** deploy R1 or authorize production access. The separate T3 unit has now migrated the local [Astro consumer](projects.md). UID selects public content; it is not visitor authentication or tenant authorization.
+This additive SQL unit covers S1/S2/S5/S7: read-only public DTOs selected by owner UUID. It does **not** deploy R1 or authorize production access. The separate T3 unit has now migrated the local [Astro consumer](projects.md). UID selects public content; it is not visitor authentication or tenant authorization.
 
 ## Run the isolated proof
 
-Run `node scripts/test-projects-sql.mjs` from the repository with Node 24, existing pinned dependencies, Docker and an already-local `postgres:17` image. The runner strictly type-checks itself without emitting files, creates one uniquely named container with no network or host mounts, and uses fake tables/data only. No image pull, real credentials or remote calls occur. Docker is deliberately not added to `pnpm run validate`.
+Run `node scripts/test-projects-sql.mjs` from the repository with Node 24, existing pinned dependencies, Docker and an already-local `postgres:15.8` image. The runner strictly type-checks itself without emitting files, creates one uniquely named container with no network or host mounts, and uses fake tables/data only. No image pull, real credentials or remote calls occur. Docker is deliberately not added to `pnpm run validate`.
 
-Each subprocess has a 60-second timeout; database readiness is bounded to 30 polls. Fixture and migration setup run once. Setup failure reports zero tests and preserves its container for inspection (including its printed name); there is no automatic retry. After probes, only that run's container is removed. A missing migration explicitly runs the RED baseline, not a passing setup fallback.
+Each subprocess has a 60-second timeout; database readiness is bounded to 30 polls. Fixture setup, the PostgreSQL 15 version check and the existing-application baseline run once. Setup failure reports zero tests and preserves its container for inspection (including its printed name); there is no automatic retry. Migration application is then a counted regression probe under `fixture_deployer`, a non-superuser with `CREATEROLE`, disposable database/schema authority and table ownership. A migration failure records a failed probe and stops later probes. After probes, only that run's container is removed. A missing migration explicitly runs the RED baseline, not a passing setup fallback.
+
+The PG15 regression also compares existing application memberships, grants, policies and a management RPC, exercises fake project/translation CRUD before and after migration, and checks that temporary deployment privileges do not remain. Negative probes reject an inheriting authenticator, existing PUBLIC schema CREATE and missing deployer schema authority; transaction failure must preserve prior roles, grants, policies, schema privileges and fake rows. It does not exercise the real dashboard/webhooks or prove hosted permissions. Historical SQL62/62 results were obtained on PG17, not this new fixture; see the [task log](../odd/tasks/r1-public-projects.md) for observed PG15 results.
 
 ## RPC contract for the Edge implementation
 
@@ -33,11 +35,13 @@ The SQL signature is `(uuid, integer, integer) RETURNS jsonb`. All arguments are
 | --- | --- |
 | `public_projects_export_owner` | NOLOGIN, NOINHERIT, NOBYPASSRLS; owns the fixed-search-path SECURITY DEFINER RPC. Exact column SELECT only on the three existing tables; dedicated SELECT policies permit all owners. No state/private-column grants or writes. |
 | `public_projects_runtime` | Separate NOLOGIN, NOINHERIT, NOBYPASSRLS role. Explicit EXECUTE only on this RPC, schema USAGE, no table grants or export-owner membership. |
-| `authenticator` | May SET ROLE to runtime, without inheriting it (PostgreSQL 16+ membership syntax). Existing management memberships/grants are untouched. |
+| `authenticator` | Must already be NOINHERIT. Plain PostgreSQL 15 membership permits SET ROLE to runtime without automatically inheriting EXECUTE. Existing management memberships/grants and role attributes are untouched. |
 | Edge (local T2) | `SUPABASE_URL`, public infrastructure `SUPABASE_ANON_KEY` for `apikey`, and operator-provisioned secret `PUBLIC_PROJECTS_ROLE_JWT` for `Authorization: Bearer …` with runtime role claim. Never use a service-role key. |
 | Sites (T3) | Only `MOCKLAB_PROJECTS_URL` (shared public Edge endpoint) and `MOCKLAB_USER_ID`. No old-name fallback, role JWT or infrastructure key on sites. |
 
-The migration is transactional and one-shot: name collisions fail, rather than adopting/replacing pre-existing objects. It refuses disabled RLS or existing PUBLIC table/column privileges on these three tables; it never repairs them by revoking management access. Permissive PUBLIC **policies** do not grant column access. PUBLIC/anon/authenticated EXECUTE is revoked on this RPC only.
+The migration is transactional and one-shot: name collisions fail, rather than adopting/replacing pre-existing objects. It refuses disabled RLS, existing PUBLIC table/column privileges on these three tables, PUBLIC schema CREATE, or an absent/inheriting authenticator; it never repairs them by revoking management access or altering existing roles. Permissive PUBLIC **policies** do not grant column access. PUBLIC/anon/authenticated EXECUTE is revoked on this RPC only.
+
+For non-superuser deployment, the principal needs CREATEROLE, table/policy ownership and authority to create functions and grant/revoke CREATE on `public`. The migration temporarily grants membership in the **new** export-owner role to `CURRENT_USER` and schema CREATE to that new role, transfers function ownership, then revokes both exact temporary grants before COMMIT. Any failure rolls back this transaction. No existing app membership, table grant or schema grant is revoked. Local fixture authority models these prerequisites; it does not establish that the hosted deploying principal has them. PostgreSQL 15 semantics are documented in [ALTER FUNCTION](https://www.postgresql.org/docs/15/sql-alterfunction.html) and [role membership](https://www.postgresql.org/docs/15/role-membership.html).
 
 **Not global hardening:** NOINHERIT does not remove PUBLIC privileges. Existing/default PUBLIC EXECUTE on other functions, especially SECURITY DEFINER functions, can remain reachable by either new role. Schema CREATE, other schemas/tables, future grants, existing restrictive policies and policy-function dependencies need operator audit. This migration does not claim that runtime can effectively execute only one function across the database, or that existing management access became read-only.
 
@@ -46,7 +50,8 @@ The migration is transactional and one-shot: name collisions fail, rather than a
 - Confirm the intended `galia_dev` / `mygqfdbloqojffhsurgo` target and PostgreSQL version through authorized project identity tooling, not a generic SQL login. Confirm actual table types, unique/FK relations, RLS policies, effective/default grants and policy dependencies against the fixture assumptions before applying anything.
 - Audit inherited PUBLIC access and definer functions; resolve unsafe access separately with management-owner approval. Confirm the deploying principal can create roles/policies and transfer function ownership. Never give runtime membership in management/export-owner roles.
 - Separately authorize migration application, PostgREST schema-cache refresh/exposure, custom role JWT provisioning/rotation/expiry, infrastructure key and Edge gateway configuration. Verify hosted role switching, sanitized failures, no-store and real HTTP pagination before deployment approval. No tokens are minted/read by this unit.
-Local evidence is recorded in the [R1 task log](../odd/tasks/r1-public-projects.md): isolated SQL62/62, final application validation150/150, independent consumer16/16 and approved native code reviews. These completed checks do not establish hosted Supabase/PostgREST/Vercel behavior or close R1.
+
+Local evidence is recorded in the [R1 task log](../odd/tasks/r1-public-projects.md): historical isolated PG17 SQL62/62, final application validation150/150, independent consumer16/16 and approved native code reviews. These completed checks do not establish hosted Supabase/PostgREST/Vercel behavior or close R1.
 
 ## Rollback boundary
 

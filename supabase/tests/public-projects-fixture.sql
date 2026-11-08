@@ -2,6 +2,11 @@
 CREATE ROLE anon NOLOGIN;
 CREATE ROLE authenticated NOLOGIN;
 CREATE ROLE authenticator NOLOGIN NOINHERIT;
+CREATE ROLE service_role NOLOGIN BYPASSRLS;
+CREATE ROLE fixture_deployer LOGIN CREATEROLE NOSUPERUSER NOBYPASSRLS;
+GRANT anon, authenticated, service_role TO authenticator;
+-- Own only this disposable database; model schema authority without superuser execution.
+ALTER DATABASE postgres OWNER TO fixture_deployer;
 CREATE SCHEMA auth;
 CREATE FUNCTION auth.role() RETURNS text LANGUAGE sql STABLE
 AS $$ SELECT current_setting('request.jwt.claim.role', true) $$;
@@ -21,6 +26,16 @@ CREATE TABLE public.project_translations (
   FOREIGN KEY (project_id, original_language)
     REFERENCES public.project_translation_settings (project_id, original_language)
 );
+ALTER TABLE public.projects OWNER TO fixture_deployer;
+ALTER TABLE public.project_translation_settings OWNER TO fixture_deployer;
+ALTER TABLE public.project_translations OWNER TO fixture_deployer;
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.projects,
+  public.project_translation_settings, public.project_translations TO authenticated, service_role;
+GRANT SELECT ON public.projects TO anon;
+CREATE FUNCTION public.fixture_management_count() RETURNS bigint LANGUAGE sql STABLE
+AS $$ SELECT count(*) FROM public.projects $$;
+REVOKE ALL ON FUNCTION public.fixture_management_count() FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION public.fixture_management_count() TO authenticated, service_role;
 ALTER TABLE public.projects ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.project_translation_settings ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.project_translations ENABLE ROW LEVEL SECURITY;

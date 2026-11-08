@@ -1,5 +1,12 @@
 -- Additive, one-shot migration; collisions fail rather than adopt existing roles/objects.
 BEGIN;
+-- PostgreSQL 15 uses the member role's INHERIT attribute; preserve existing roles.
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT FROM pg_catalog.pg_roles WHERE rolname = 'authenticator' AND NOT rolinherit) THEN
+    RAISE EXCEPTION 'Export requires an existing NOINHERIT authenticator' USING ERRCODE = '22023';
+  END IF;
+END $$;
 CREATE ROLE public_projects_export_owner NOLOGIN NOINHERIT NOSUPERUSER
   NOCREATEDB NOCREATEROLE NOREPLICATION NOBYPASSRLS;
 CREATE ROLE public_projects_runtime NOLOGIN NOINHERIT NOSUPERUSER
@@ -8,6 +15,9 @@ CREATE ROLE public_projects_runtime NOLOGIN NOINHERIT NOSUPERUSER
 -- PUBLIC privileges bypass NOINHERIT. Refuse unsafe table grants without changing them.
 DO $$
 BEGIN
+  IF pg_catalog.has_schema_privilege('public_projects_export_owner', 'public', 'CREATE') THEN
+    RAISE EXCEPTION 'Export requires no PUBLIC schema CREATE privilege' USING ERRCODE = '22023';
+  END IF;
   IF EXISTS (
     SELECT FROM pg_catalog.pg_class c
     WHERE c.oid IN ('public.projects'::regclass,
@@ -71,9 +81,15 @@ BEGIN
   RETURN result;
 END $$;
 
-ALTER FUNCTION public.export_public_projects(uuid, integer, integer) OWNER TO public_projects_export_owner;
 REVOKE ALL ON FUNCTION public.export_public_projects(uuid, integer, integer) FROM PUBLIC, anon, authenticated;
 GRANT EXECUTE ON FUNCTION public.export_public_projects(uuid, integer, integer) TO public_projects_runtime;
--- PostgreSQL 16+: PostgREST must SET ROLE; authenticator does not inherit EXECUTE.
-GRANT public_projects_runtime TO authenticator WITH INHERIT FALSE, SET TRUE;
+-- A non-superuser needs membership and new-owner schema CREATE for ownership transfer.
+-- Both grants target the freshly created role only and are removed before COMMIT.
+GRANT public_projects_export_owner TO CURRENT_USER;
+GRANT CREATE ON SCHEMA public TO public_projects_export_owner;
+ALTER FUNCTION public.export_public_projects(uuid, integer, integer) OWNER TO public_projects_export_owner;
+REVOKE CREATE ON SCHEMA public FROM public_projects_export_owner;
+REVOKE public_projects_export_owner FROM CURRENT_USER;
+-- PG15 membership permits SET ROLE; the preflighted NOINHERIT prevents automatic use.
+GRANT public_projects_runtime TO authenticator;
 COMMIT;
