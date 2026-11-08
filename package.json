@@ -9,6 +9,8 @@
   "scripts": {
     "dev": "astro dev",
     "check": "astro check",
+    "init:client": "node scripts/init-client.mjs",
+    "check:client-init": "tsc --ignoreConfig --noEmit --strict --allowJs --checkJs --module nodenext --moduleResolution nodenext --target es2022 --types node --allowImportingTsExtensions --skipLibCheck scripts/init-client.mjs scripts/client-init/*.mjs tests/client-init*.test.mjs tests/helpers/client-init*.mjs tests/i18n.test.mjs tests/helpers/build-fixture.mjs",
     "test": "astro build && node --test tests/*.test.mjs",
     "validate": "astro check && astro build && node --test tests/*.test.mjs",
     "build": "astro build",

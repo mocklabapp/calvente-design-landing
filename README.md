@@ -22,6 +22,8 @@ Open the URL printed by Astro (normally http://localhost:4321). Static pages, de
 | --- | --- |
 | `corepack pnpm dev` | Start the development server. |
 | `corepack pnpm check` | Check Astro and TypeScript types. |
+| `corepack pnpm init:client` | Preview a read-only client plan; explicit `--apply` / `--resume` enable the backed-up in-place initializer. |
+| `corepack pnpm run check:client-init` | Strictly type-check initializer scripts and their test/build fixtures. |
 | `corepack pnpm build` | Build static pages in `dist/client/` and Vercel functions/routing in `.vercel/output/`. |
 | `corepack pnpm preview` | Unsupported by the Vercel adapter; use `corepack pnpm dev` locally. |
 | `corepack pnpm test` | Build and test HTML, multilingual builds and the projects integration. |
@@ -51,8 +53,8 @@ Git does not preserve empty directories. Create directories from this structure 
 
 ## Start a new website
 
-1. Copy this project into a separate directory or repository, excluding `node_modules/`, `.astro/`, `dist/`, `.vercel/`, local `.env`/`.env.*` files (retain the blank `.env.example`), ignored local tools/shims and any `.git/` directory. Retain the package, lock and workspace files.
-2. Use Node 24.x, available Corepack and the pinned pnpm. Change `name` in `package.json`; a rename alone does not change pnpm's lockfile. Reuse the lock with `corepack pnpm install --frozen-lockfile`. For intentional dependency/config changes, run `corepack pnpm install --lockfile-only`, inspect the diff and commit the lock alongside the change; do not regenerate it merely to copy the starter.
+1. Start from your existing normal GitHub clone of `mocklabapp/base-landing-mocklab`. Work in place; keep `.git`, package, lock and workspace files. Do not create a generated/copied destination project.
+2. Use Node 24.x, available Corepack and the pinned pnpm. After the explicit frozen install above, run `corepack pnpm init:client` to review a client display name, editable slug and optional portfolio plan. Default confirmation changes nothing. [Read the apply/resume guide and supported-clone restrictions](docs/client-initializer.md) before using `--apply` with an explicit Git author. Application verifies a retained external backup before identity edits, validates locally before independent history, and requires separate approval for private `mocklabapp` publication. Push may trigger deployment integrations; Vercel stays manual. Directory rename is last; declining publication preserves prepared local state for explicit resume. A package-name-only change needs no lockfile regeneration. Fresh client history preserves the verified blank environment template unchanged; apply/resume refuse unknown environment material before validation. Active organization members are supported when private-repository creation permission is verified; unknown or public-only permission stops.
 3. Have your coding host load [AGENTS.md](AGENTS.md), or explicitly request it with the prompt below. Follow [the guided kickoff](docs/project-kickoff.md), recording answers in [the project brief](docs/project-brief.md) before client implementation. If the site uses the portfolio integration, also resolve [its data kickoff checklist](docs/projects.md#client-kickoff-checklist): owner UUID, public fields/states, partial translations and refresh/error presentation.
 4. Once the first slice's scope and visual decisions are approved, edit `src/config/site.ts`, replace the favicon/assets and set agreed tokens in `src/styles/tokens.css`. Add native Astro UI and section components as needed.
 5. Add approved page translations in `src/data/pages.ts` and enable agreed languages in `src/i18n/locales.ts`. Reuse the shared renderer and `BaseLayout` for localized metadata.
