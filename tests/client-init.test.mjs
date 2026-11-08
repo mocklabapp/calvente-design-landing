@@ -14,6 +14,7 @@ test('public help labels the plan-only boundary without requiring a valid clone'
   assert.equal(result.status, 0, result.stderr);
   assert.match(result.stdout, /plan-only/i);
   assert.match(result.stdout, /--confirm-plan/);
+  assert.match(result.stdout, /verified mocklabapp private-repository creation permissions/);
   assert.match(result.stdout, /No files.*changed/);
 });
 

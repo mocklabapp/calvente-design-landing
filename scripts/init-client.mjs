@@ -24,7 +24,7 @@ Apply/resume (explicit, separate from plan confirmation):
   --author-name NAME    Explicit author for independent history (required with apply)
   --author-email EMAIL  Explicit author email (required with apply)
   --resume ABS_BACKUP   Resume only this recorded operation, from its current root
-Apply checks authenticated mocklabapp admin rights and collision before editing.
+Apply checks verified mocklabapp private-repository creation permissions and collision before editing.
 Retained external backup, validation and HISTORY approval precede new history.
 PUBLISH approval creates a private org repository and pushes; push may deploy.
 Declining publication preserves local preparation. Vercel setup remains manual.
