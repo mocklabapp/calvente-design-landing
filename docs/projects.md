@@ -87,6 +87,46 @@ The example explicitly renders no text for `missing`, leaving an empty article m
 
 Import `getProjects()` only in server frontmatter or server modules. Never import it in an Astro `<script>` or other browser module: its `astro:env/server` dependency causes Astro to reject client builds. The pure `selectProjectContent()` helper does not import that server-only runtime. A React-style client hook is unnecessary in this native-component stack.
 
+## Localized project categories
+
+Use [`src/lib/project-categories.ts`](../src/lib/project-categories.ts) to present the project form's stored `category` values. This pure, browser-safe catalog supplies ten ordered IDs (`projectCategoryIds`), the derived `ProjectCategoryId` type, Spanish/English labels and fresh `{ value, label }` options. Translate labels, never stored values:
+
+| Stored value | Spanish | English |
+| --- | --- | --- |
+| `residencial` | Residencial | Residential |
+| `docente` | Docente | Educational |
+| `oficinas` | Oficinas | Offices |
+| `planeamiento` | Planeamiento | Urban planning |
+| `industrial` | Industrial | Industrial |
+| `cultural` | Cultural | Cultural |
+| `publico` | Espacio público | Public space |
+| `rehabilitacion` | Rehabilitación | Rehabilitation |
+| `interiorismo` | Interiorismo | Interior design |
+| `sanitario` | Sanitario | Healthcare |
+
+In the Astro example above, import the helper in frontmatter and resolve each project's category using the same page locale:
+
+```ts
+import { getProjectCategoryLabel, getProjectCategoryOptions } from '@/lib/project-categories';
+
+// Inside projects.map((project) => { ... }):
+const categoryLabel = getProjectCategoryLabel(project.category, page.locale);
+// Render only when present: {categoryLabel !== null && <p>{categoryLabel}</p>}
+
+// For a future approved category selector; values remain the stored IDs:
+const options = getProjectCategoryOptions(page.locale);
+```
+
+`getProjectCategoryLabel()` returns `null` for absent or unknown categories and unsupported languages. Matching is exact: no trimming, case conversion, raw-value display or Spanish fallback. Choose approved missing-category presentation in the consuming UI. The API's `category: string | null` remains unchanged: unknown text is preserved by data access, not rejected or rewritten by this presentation catalog. Older construction types may omit it; the label helper accepts `undefined` too.
+
+To maintain the catalog:
+
+1. Change display wording in the module's `labels` dictionary. Add a new confirmed stored ID to `projectCategoryIds` only when the form's contract changes, then supply its label in every dictionary; types enforce completeness.
+2. When [registering another site locale](i18n.md#add-another-language-independently), add its complete category dictionary as well. Dictionaries are exhaustively typed against `Locale`, including registered but disabled locales. Supplied English labels do not enable English routes.
+3. Update [`tests/project-categories.test.mjs`](../tests/project-categories.test.mjs), run `node --test tests/project-categories.test.mjs`, then `corepack pnpm run validate`.
+
+This catalog creates no UI, routes, filters or database validation; those remain separate requirements.
+
 ## Consume from the browser
 
 A custom browser component can call the public endpoint without any Supabase credentials:

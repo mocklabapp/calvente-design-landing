@@ -83,6 +83,8 @@ Use `getProjects()` from server-only native Astro frontmatter or fetch `GET /api
 
 For a future localized live page, use `selectProjectContent(project, page.locale)` alongside the same published page's local copy/UI. Native language links load the whole selected-language page; missing/partial project text never silently falls back. Follow the [copyable SSR example](docs/projects.md#consume-in-native-astro-frontmatter) and [locale registration/UI/content/enable steps](docs/i18n.md#add-another-language-independently); data languages do not enable site locales.
 
+For category display or selector options, use the [localized project category catalog](docs/projects.md#localized-project-categories): ten stable stored IDs with typed Spanish/English labels, resolved using the page locale. Unknown or missing values have no label; API data and enabled site languages remain unchanged.
+
 Routes rendering this data must use `prerender = false` and no-store response headers so dashboard changes appear on subsequent requests without rebuilding. The existing pages remain static. See [the projects guide](docs/projects.md) for examples, runtime setup, security boundaries and the **unresolved bundled-Zod dependency advisory**. This integration does not create a visual portfolio page or authorize deployment. The images/category/year extension is deployed on the authorized shared `galia_dev` service (Edge version 4); see the [rollout evidence](docs/public-projects-edge.md#portfolio-rollout). Older service responses normalize missing additions to `[]`/`null`. Other Supabase targets and individual website deployments still require separate authorization.
 
 ## Styling contract
