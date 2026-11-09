@@ -13,6 +13,7 @@ export const config = {
 /** @param {string} [id] */
 export const project = (id = '9007199254740993') => ({
   id, title: null, description: 'Original', weblink: null, originalLanguage: null,
+  images: [], category: null, year: null,
   translations: [{ language: 'ca', title: 'Traducció', description: null }],
 });
 /** @param {unknown[]} projects @param {string} [total] @param {number} [offset] */

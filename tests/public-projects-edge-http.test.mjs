@@ -111,6 +111,10 @@ test('upstream failures and invalid data discard partial output and hide details
   for (const partial of [false, true]) {
     for (const outcome of [new Error('PRIVATE'), new Response('PRIVATE', { status: 403 }),
       new Response('PRIVATE'), Response.json(page([{ ...project(), id: 'PRIVATE' }])),
+      Response.json(page([{ ...project(), images: [{ url: 'https://private.test/PRIVATE' }] }])),
+      Response.json(page([{ ...project(), category: 2024 }])),
+      Response.json(page([{ ...project(), year: {} }])),
+      Response.json(page([{ ...project(), images: null }])),
     ]) {
       let calls = 0;
       /** @type {typeof globalThis.fetch} */

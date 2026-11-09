@@ -10,6 +10,7 @@ import { fixture } from './helpers/build-fixture.mjs';
 
 const owner = '12345678-1234-4234-8234-123456789abc';
 const privateDetail = 'runtime-fixture-private-detail';
+const imagePrefix = 'https://abcdefghijklmnopqrst.supabase.co/storage/v1/object/public/projects-images/';
 const names = ['MOCKLAB_PROJECTS_URL', 'MOCKLAB_USER_ID', 'GALIA_PROJECTS_URL', 'GALIA_USER_ID', 'SUPABASE_URL',
   'SUPABASE_SECRET_KEY', 'SUPABASE_ANON_KEY', 'PUBLIC_PROJECTS_ROLE_JWT'];
 /** @param {import('node:http').Server} server */
@@ -43,6 +44,9 @@ test('built Vercel public HTTP endpoint reflects changed upstream without rebuil
     res.end(JSON.stringify({ projects: ['draft', 'published'].map((state, i) => ({
       id: String(i + 1), title: `${state} v${version}`, description: null,
       weblink: null, state, prompt: privateDetail, originalLanguage: null, translations: [],
+      images: [{ url: `${imagePrefix}${i}-v${version}.jpg${version === 4 ? '?token=PRIVATE' : ''}`,
+        status: 'pending', processingResult: { timestamps: privateDetail } }],
+      category: i === 0 ? 'Architecture' : null, year: `v${version}`,
     })) }));
   });
   /** @type {import('node:http').Server | undefined} */
@@ -74,25 +78,26 @@ test('built Vercel public HTTP endpoint reflects changed upstream without rebuil
       } catch { res.writeHead(500); res.end('Fixture handler failed'); }
     });
     const site = await listen(server);
-    for (version = 1; version <= 3; version++) {
+    for (version = 1; version <= 4; version++) {
       const result = await nativeFetch(`${site}/api/projects.json?uid=foreign&MOCKLAB_PROJECTS_URL=https://evil.test`);
-      assert.equal(result.status, version === 3 ? 503 : 200);
+      assert.equal(result.status, version >= 3 ? 503 : 200);
       for (const header of ['cache-control', 'cdn-cache-control', 'vercel-cdn-cache-control']) {
         assert.equal(result.headers.get(header), 'no-store');
       }
       const body = await result.text();
       assert.ok(!body.includes(privateDetail));
-      assert.deepEqual(JSON.parse(body), version === 3 ? { error: 'Projects unavailable' } : {
+      assert.deepEqual(JSON.parse(body), version >= 3 ? { error: 'Projects unavailable' } : {
         projects: ['draft', 'published'].map((state, i) => ({ id: String(i + 1),
           title: `${state} v${version}`, description: null, weblink: null,
-          originalLanguage: null, translations: [] })),
+          originalLanguage: null, translations: [], images: [{ url: `${imagePrefix}${i}-v${version}.jpg` }],
+          category: i === 0 ? 'Architecture' : null, year: `v${version}` })),
       });
     }
-    assert.equal(upstreamCalls, 3);
+    assert.equal(upstreamCalls, 4);
     delete process.env.MOCKLAB_PROJECTS_URL;
     const unconfigured = await nativeFetch(`${site}/api/projects.json`);
     assert.equal(unconfigured.status, 503);
-    assert.equal(upstreamCalls, 3);
+    assert.equal(upstreamCalls, 4);
     assert.equal(unconfigured.headers.get('cache-control'), 'no-store');
     const config = await readFile(join(build.root, '.vercel/output/config.json'), 'utf8');
     assert.ok(config.includes('_render'));

@@ -1,8 +1,13 @@
+import { parseProjectImages, type ProjectImage } from './images.ts';
+
 export interface PublicProject {
   id: string;
   title: string | null;
   description: string | null;
   weblink: string | null;
+  images: ProjectImage[];
+  category: string | null;
+  year: string | null;
   originalLanguage: 'es' | 'en' | 'ca' | null;
   translations: { language: 'es' | 'en' | 'ca'; title: string | null; description: string | null }[];
 }
@@ -28,7 +33,7 @@ function language(value: unknown): 'es' | 'en' | 'ca' {
   throw unavailable();
 }
 
-function project(value: unknown): PublicProject {
+function project(value: unknown, origin: string): PublicProject {
   const row = record(value);
   if (typeof row.id !== 'string' || !/^[1-9]\d{0,18}$/.test(row.id)
     || BigInt(row.id) > 9223372036854775807n || !Array.isArray(row.translations)) throw unavailable();
@@ -43,16 +48,19 @@ function project(value: unknown): PublicProject {
   return {
     id: row.id, title: text(row.title), description: text(row.description), weblink: text(row.weblink),
     originalLanguage: row.originalLanguage === null ? null : language(row.originalLanguage), translations,
+    images: Object.hasOwn(row, 'images') ? parseProjectImages(row.images, origin) : [],
+    category: Object.hasOwn(row, 'category') ? text(row.category) : null,
+    year: Object.hasOwn(row, 'year') ? text(row.year) : null,
   };
 }
 
-export function parsePage(value: unknown, offset: number) {
+export function parsePage(value: unknown, offset: number, origin: string) {
   const row = record(value);
   if (typeof row.total !== 'string' || !/^(0|[1-9]\d{0,6})$/.test(row.total)
     || Number(row.total) > 1_000_200 || row.offset !== offset || row.limit !== 200
     || !Array.isArray(row.projects) || row.count !== row.projects.length
     || row.projects.length > 200) throw unavailable();
-  return { total: Number(row.total), projects: row.projects.map((item: unknown) => project(item)) };
+  return { total: Number(row.total), projects: row.projects.map((item: unknown) => project(item, origin)) };
 }
 
 /** An explicit publishable dictionary must be valid; only absence permits legacy fallback. */

@@ -104,7 +104,7 @@ Success is `200` with `{ "projects": [...] }`; an empty portfolio returns an emp
 
 ## Exact data contract
 
-The return value of `getProjects()` is `PublicProject[]`; the endpoint wraps the same array in `projects`. Only these fields are returned:
+The return value of `getProjects()` is `NormalizedPublicProject[]`, assignable to `PublicProject[]`; the endpoint wraps the same array in `projects`. Only these fields are returned:
 
 | Field | Meaning |
 | --- | --- |
@@ -112,12 +112,20 @@ The return value of `getProjects()` is `PublicProject[]`; the endpoint wraps the
 | `title`, `description`, `weblink` | Original project values, each string or null. |
 | `originalLanguage` | `es`, `en` or `ca` when settings exist; null means unknown. |
 | `translations` | Array of objects with **only** `language`, `title`, `description`; content fields may be null. |
+| `images` | Ordered array of `{ url: string }` from flat `image_data` (hosted type `jsonb[]`); no inferred cover or grouping. |
+| `category`, `year` | Text or null, preserved exactly; year is not parsed as a number/date. |
 
-This intentionally small initial allowlist supports text/link composition without promising all database columns. Images (`image_data`), keywords, map coordinates and other portfolio fields are not fetched or returned. Prompt, NAS folder, owner UUID and internal automation/assignment metadata are not public output. Extending the contract requires a separately reviewed allowlist, validation and tests.
+Only image URLs leave the raw image field: `status`, `processingResult` and timestamps are stripped regardless of processing state. State, photoCredit/photoCreditLink, authorship, promoters, collaborators, location/showMap, keywords, prompt, NAS folder, owner UUID and internal metadata are excluded. Extending this allowlist requires separate review.
+
+SQL reads normalize `image_data` with `to_jsonb` before validation and projection, supporting PostgreSQL `jsonb[]` and JSONB arrays without changing the stored column type. SQL NULL `image_data` becomes `[]`; SQL NULL elements and JSON null elements are rejected. Absent additions from older service responses normalize to `images: []`, `category: null`, `year: null`. Present malformed values (including `images: null`, nonarrays, nonobject entries or missing/nonstring URLs) reject the entire response; invalid images are never silently dropped. The SQL export validates before projecting, preventing numeric URLs from being coerced into text. `category`/`year` are nullable database text, not JSON fields.
+
+Both Edge and site validate each URL against their trusted configured Supabase origin and exactly two public bucket prefixes: `/storage/v1/object/public/projects-images/` and `/storage/v1/object/public/user-media/`. Read-only rollout preflight confirmed both buckets are public; this does not permit arbitrary buckets or change storage permissions. URLs need a nonempty object name and no credentials, port, raw whitespace/control characters, query or fragment. Signed/private paths, other hosts/buckets and raw or encoded traversal/backslashes fail closed. Encoded spaces, Unicode, literal percent, `#`/`?` and safe encoded path separators remain supported; original URL spelling/order is retained. This validates addressing, not image existence, contents, usage rights or storage permissions; images are not fetched by the validator.
+
+For source compatibility, the three additions are optional on the public construction type `PublicProject`. Existing hand-authored text-only projects and `selectProjectContent()` callers remain valid. Fetched results use `NormalizedPublicProject`, which requires all three additions. Consumers accepting the older construction type should use `project.images ?? []`; fetched results already contain an array.
 
 - All projects belonging to the configured UUID are included, regardless of state. There is no draft/published filter. The site never accepts visitor owner overrides; the shared public Edge service accepts any valid owner selector.
 - The database export preserves `projects -> project_translation_settings -> project_translations`, not a direct projects/translations join. Settings connect using `project_id`; translations use the settings' `project_id` and `original_language` relationship.
-- Missing settings remain `originalLanguage: null` and `translations: []`; Spanish is not inferred. Settings without translations preserve the known original language and an empty array.
+- Missing settings remain `originalLanguage: null` and `translations: []`; Spanish is not inferred. Original title/description can still exist because they come from `projects`, independently of settings. `selectProjectContent()` then reports missing for a requested language without an exact translation; it does not guess from text. This explains a possible data shape, not a verified production cause. Settings without translations preserve the known original language and an empty array.
 - Partial translations remain partial: a null title or description stays null. No locale fallback, translation synthesis or automatic locale enabling occurs. Database content languages (`es`, `en`, `ca`) are independent of the site's enabled-page locale registry; the existing [i18n contract](i18n.md) still governs routes and UI.
 
 Each `getProjects()` call reads exactly `MOCKLAB_PROJECTS_URL` and `MOCKLAB_USER_ID` at runtime and delegates to the [public client](projects-client.md): one credential-free GET with `uid`, no-store, rejected redirects and a ten-second deadline. The client validates the complete `{projects: [...]}` response, including strictly increasing signed-bigint string IDs, and reconstructs the allowlist. Ownership selection and database pagination belong to Edge; the owner-free DTO cannot independently prove ownership at the site. Errors expose no upstream details. There is no cross-request data cache, ISR or persistent caching. Edge pagination is not a transactional snapshot across simultaneous database edits; failures never return a knowingly partial portfolio.
@@ -125,6 +133,8 @@ Each `getProjects()` call reads exactly `MOCKLAB_PROJECTS_URL` and `MOCKLAB_USER
 Dashboard content changes appear on subsequent requests to the dynamic endpoint or an on-demand page without rebuilding. Already open browser components must fetch again to observe changes; no realtime subscription or polling is installed. Configuration/code changes still follow the normal deployment lifecycle.
 
 ## Build, local checks and deployment boundary
+
+The portfolio extension is deployed on the authorized `galia_dev` / `mygqfdbloqojffhsurgo` shared service: successor migration recorded as `20261108215034_public_projects_portfolio`, Edge version 4. Its source `202608010001_public_projects_portfolio.sql` follows the unchanged historical migration, grants only three additional columns and retains the RPC ACL. Hosted checks passed for 22 projects and 185 images through the actual client; see [bounded rollout evidence](public-projects-edge.md#portfolio-rollout). Existing management access is not hardened or revoked. No website was deployed; consumers on older code still discard the new fields until their local client is updated and deployed separately. Other targets require their own authorization. Updated consumers accept older service responses; never replay either applied migration.
 
 The official `@astrojs/vercel` adapter supports Astro 7. Before an authorized deployment, select Node.js 24.x in Vercel Project Settings (the package's `engines.node: 24.x` selects this major), set `ENABLE_EXPERIMENTAL_COREPACK=1` to honor the exact `packageManager` version, and use `corepack pnpm install --frozen-lockfile` and `corepack pnpm build` for install/build commands. These are required platform settings to check, not changes made remotely or proof of a live deployment. Static output is in `dist/client/` and copied to `.vercel/output/static`; Vercel functions and routing metadata live under `.vercel/output/`. Uploading static assets alone cannot serve the dynamic endpoint. Do not copy `.vercel/` into a new client project.
 
