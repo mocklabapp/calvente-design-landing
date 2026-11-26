@@ -155,9 +155,8 @@ const copy = homeCopy[locale].hero;
 </style>
 
 <script>
-  const autoplayMs = 6000;
+  // Slides change only on visitor input (dots or swipe), as in the prototype.
   const swipeThreshold = 40;
-  const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
 
   function setup(root: HTMLElement): void {
     const slides = [...root.querySelectorAll<HTMLElement>('.hs-s')];
@@ -165,7 +164,6 @@ const copy = homeCopy[locale].hero;
     const count = slides.length;
     if (count < 2) return;
     let current = 0;
-    let timer: number | undefined;
     let touchX: number | null = null;
     let swiped = false;
 
@@ -184,21 +182,8 @@ const copy = homeCopy[locale].hero;
       });
     }
 
-    function stop(): void {
-      window.clearInterval(timer);
-      timer = undefined;
-    }
-    function start(): void {
-      stop();
-      if (reducedMotion.matches) return;
-      timer = window.setInterval(() => goTo(current + 1), autoplayMs);
-    }
-
     dots.forEach((dot, position) => {
-      dot.addEventListener('click', () => {
-        goTo(position);
-        start();
-      });
+      dot.addEventListener('click', () => goTo(position));
     });
 
     root.addEventListener('touchstart', (event) => {
@@ -213,7 +198,6 @@ const copy = homeCopy[locale].hero;
       swiped = true;
       window.setTimeout(() => { swiped = false; }, 400);
       goTo(current + (delta < 0 ? 1 : -1));
-      start();
     });
     root.addEventListener('click', (event) => {
       if (!swiped) return;
@@ -222,13 +206,6 @@ const copy = homeCopy[locale].hero;
       swiped = false;
     }, true);
 
-    // Autoplay never moves slides under the pointer or the keyboard focus.
-    root.addEventListener('mouseenter', stop);
-    root.addEventListener('mouseleave', start);
-    root.addEventListener('focusin', stop);
-    root.addEventListener('focusout', start);
-    reducedMotion.addEventListener('change', start);
-    start();
   }
 
   document.querySelectorAll<HTMLElement>('[data-hero-slideshow]').forEach(setup);

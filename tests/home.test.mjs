@@ -95,11 +95,16 @@ for (const [locale, expected] of Object.entries(locales)) {
     ]);
   });
 
-  test(`${locale}: the workshop block renders its heading, images and captions`, () => {
+  test(`${locale}: the workshop block renders its heading and photos described only by alt text`, () => {
     assert.ok(html.includes(expected.eyebrow));
     for (const accent of expected.accents) assert.match(html, new RegExp(`<span class="it"[^>]*>${accent}</span>`));
-    const captions = [...html.matchAll(/<figcaption[^>]*>([^<]+)<\/figcaption>/g)].map((match) => match[1]);
-    assert.deepEqual(captions, expected.captions);
+    // As in the prototype, the tool photos carry no visible caption.
+    assert.doesNotMatch(html, /<figcaption/);
+    for (const caption of expected.captions) assert.match(html, new RegExp(`<img\\b[^>]*alt="${caption}"`));
     assert.match(html, /id="taller"/);
+  });
+
+  test(`${locale}: the hero slideshow never advances on its own`, () => {
+    assert.doesNotMatch(html, /setInterval|autoplay/i);
   });
 }
