@@ -1,0 +1,125 @@
+---
+import type { PageId } from '@/data/pages';
+import type { Locale } from '@/i18n/locales';
+import { homeHref, sectionItems } from '@/i18n/navigation';
+import type { Alternate } from '@/i18n/routes';
+import { ui } from '@/i18n/ui';
+import Icon from '@/components/ui/Icon.astro';
+import Logo from '@/components/ui/Logo.astro';
+import MobileMenu from './MobileMenu.astro';
+
+interface Props {
+  locale: Locale;
+  current?: PageId;
+  alternates: Alternate[];
+}
+
+const { locale, current, alternates } = Astro.props;
+const labels = ui[locale];
+const home = homeHref(locale);
+// The section bar names where the visitor is and offers a way back to the home page.
+const section = sectionItems(locale, current).find((item) => item.current);
+---
+<header class="bar">
+  <div class="top">
+    <a class="brand" href={home} aria-label={labels.homeLink}><Logo width={142} /></a>
+    <button
+      type="button"
+      class="cell open"
+      data-menu-open
+      aria-expanded="false"
+      aria-controls="mmenu"
+    ><span>{labels.menu}</span><Icon name="menu" /></button>
+  </div>
+</header>
+<div class="sub">
+  <div class="tag">{labels.tagline}</div>
+  <div class="hatch" aria-hidden="true"></div>
+  {section && (
+    <div class="section">
+      <span>{section.label}</span>
+      <a class="cell dark" href={home} aria-label={labels.close}><Icon name="x" /></a>
+    </div>
+  )}
+</div>
+<MobileMenu locale={locale} current={current} alternates={alternates} />
+
+<style>
+  .bar,
+  .sub {
+    display: none;
+  }
+  .cell {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    min-width: 56px;
+    padding: 0 16px;
+    border-left: 1px solid var(--color-brand);
+    color: var(--color-brand);
+    font: 500 11px var(--font-mono);
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    background: transparent;
+  }
+  .cell.dark {
+    background: var(--color-brand);
+    color: var(--color-on-brand);
+  }
+  .brand {
+    display: flex;
+    align-items: center;
+    flex: 1;
+    min-width: 0;
+    padding: 0 max(16px, env(safe-area-inset-left, 0px));
+  }
+  @media (max-width: 760px) {
+    .bar {
+      display: block;
+      position: sticky;
+      top: 0;
+      z-index: 30;
+      padding-top: env(safe-area-inset-top, 0px);
+      background: var(--color-canvas);
+    }
+    .top {
+      display: flex;
+      height: 56px;
+      border-bottom: 1px solid var(--color-brand);
+    }
+    .sub {
+      display: block;
+    }
+    .tag {
+      padding: 12px max(16px, env(safe-area-inset-right, 0px)) 12px max(16px, env(safe-area-inset-left, 0px));
+      border-bottom: 1px solid var(--color-line);
+      font-size: 10.5px;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+    }
+    .hatch {
+      height: 22px;
+      border-bottom: 1px solid var(--color-line);
+      background: repeating-linear-gradient(135deg, transparent 0 7px, var(--color-line) 7px 8px);
+    }
+    .section {
+      display: flex;
+      height: 44px;
+      border-bottom: 1px solid var(--color-brand);
+    }
+    .section span {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      padding-left: max(16px, env(safe-area-inset-left, 0px));
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+    }
+    .section .cell {
+      min-width: 48px;
+      padding: 0;
+    }
+  }
+</style>

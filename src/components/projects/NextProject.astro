@@ -1,0 +1,51 @@
+---
+import { childPath } from '@/i18n/routes';
+import type { Locale } from '@/i18n/locales';
+import type { ProjectsCopy } from './copy';
+import type { ProjectView } from './present';
+import ProjectPhoto from './ProjectPhoto.astro';
+
+interface Props {
+  locale: Locale;
+  copy: ProjectsCopy;
+  view: ProjectView;
+}
+
+const { locale, copy, view } = Astro.props;
+const { project, content } = view;
+---
+<div class="next">
+  <div class="up">{copy.nextProject}</div>
+  <a href={childPath('projects', locale, project.id)}>
+    <ProjectPhoto src={project.images[0]?.url} emptyLabel={copy.noImages} ratio="4/5" />
+    <div class="up title">{content.title ?? copy.missingText}</div>
+  </a>
+</div>
+
+<style>
+  .next {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 56px;
+    margin-top: 96px;
+    align-items: end;
+  }
+  a {
+    display: block;
+    justify-self: end;
+    width: 100%;
+    max-width: 300px;
+  }
+  .title {
+    margin-top: 8px;
+  }
+  @media (max-width: 860px) {
+    .next {
+      grid-template-columns: 1fr;
+      gap: 28px;
+    }
+    a {
+      justify-self: start;
+    }
+  }
+</style>

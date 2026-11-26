@@ -1,0 +1,31 @@
+---
+import { site } from '@/config/site';
+import type { PublishedPage } from '@/i18n/pages';
+import { pathFor } from '@/i18n/routes';
+import PageHead from '@/components/ui/PageHead.astro';
+import EntryCards from './EntryCards.astro';
+import HeroSlideshow from './HeroSlideshow.astro';
+import WorkshopBlock from './WorkshopBlock.astro';
+import { homeCopy } from './copy';
+import { heroSlides } from './heroSlides';
+
+interface Props { page: PublishedPage }
+
+const { page } = Astro.props;
+const { locale } = page;
+const projectsHref = pathFor('projects', locale);
+const collectionsHref = pathFor('collections', locale);
+// The designed home needs its copy and both entry pages in this locale. A locale that publishes
+// only some of them (e.g. just the home) shows the registry page head instead of failing.
+const hasCopy = (homeCopy as Partial<typeof homeCopy>)[locale] !== undefined;
+---
+{!hasCopy || projectsHref === undefined || collectionsHref === undefined ? (
+  <div class="wrap"><PageHead title={page.content.title} intro={page.content.body} /></div>
+) : (
+<div class="wrap">
+  <h1 class="sr-only">{site.name}</h1>
+  <HeroSlideshow slides={heroSlides(locale)} locale={locale} href={projectsHref} />
+  <EntryCards locale={locale} projectsHref={projectsHref} collectionsHref={collectionsHref} />
+  <WorkshopBlock locale={locale} />
+</div>
+)}

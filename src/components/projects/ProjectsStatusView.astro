@@ -1,0 +1,36 @@
+---
+import type { PublishedPage } from '@/i18n/pages';
+import { projectsCopy } from './copy';
+
+interface Props {
+  /** Registry page of the projects listing in the current locale. */
+  page: PublishedPage;
+  kind: 'unavailable' | 'notFound';
+}
+
+const { page, kind } = Astro.props;
+const copy = projectsCopy[page.locale];
+const title = kind === 'unavailable' ? copy.unavailableTitle : copy.notFoundTitle;
+const body = kind === 'unavailable' ? copy.unavailableBody : copy.notFoundBody;
+---
+<section class="wrap status" data-state={kind}>
+  <h1>{title}</h1>
+  <p>{body}</p>
+  <p class="up"><a class="lnk" href={page.path}>⟵ {copy.backToProjects}</a></p>
+</section>
+
+<style>
+  .status {
+    display: grid;
+    gap: 16px;
+    justify-items: start;
+    padding-block: 56px 96px;
+  }
+  h1 {
+    font-size: clamp(30px, 4.2vw, 52px);
+    line-height: 1.02;
+  }
+  p {
+    max-width: 56ch;
+  }
+</style>

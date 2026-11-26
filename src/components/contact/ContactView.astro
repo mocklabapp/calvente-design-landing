@@ -1,0 +1,29 @@
+---
+import type { PublishedPage } from '@/i18n/pages';
+import ContactDetails from './ContactDetails.astro';
+import ContactForm from './ContactForm.astro';
+
+interface Props { page: PublishedPage }
+const { page } = Astro.props;
+---
+<div class="wrap">
+  <div class="two">
+    <ContactDetails locale={page.locale} title={page.content.title} />
+    <ContactForm locale={page.locale} />
+  </div>
+</div>
+
+<style>
+  .two {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 64px;
+    padding-block: 44px 0;
+  }
+  @media (max-width: 860px) {
+    .two {
+      grid-template-columns: 1fr;
+      gap: 28px;
+    }
+  }
+</style>

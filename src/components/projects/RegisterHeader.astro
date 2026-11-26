@@ -1,0 +1,43 @@
+---
+import Logo from '@/components/ui/Logo.astro';
+import type { ProjectsCopy } from './copy';
+
+interface Props {
+  copy: ProjectsCopy;
+  count: number;
+  /** Singular or plural unit that follows the count. */
+  worksLabel: string;
+}
+
+const { copy, count, worksLabel } = Astro.props;
+---
+<div class="reghead">
+  <div><Logo width={110} /><br />{copy.registerTitle}<br />{copy.registerVolume}</div>
+  <div>{copy.city}<br />{count} {worksLabel}</div>
+  <div>{copy.archive} CD-P-2026<br />{copy.pageShort} 01 / 01</div>
+</div>
+
+<style>
+  .reghead {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 40px;
+    padding-inline: 4%;
+    margin-bottom: 40px;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    line-height: 1.6;
+  }
+  .reghead > div:nth-child(n + 2) {
+    border-top: 1px solid var(--color-line);
+    padding-top: 10px;
+  }
+  @media (max-width: 860px) {
+    .reghead {
+      grid-template-columns: 1fr;
+      gap: 10px;
+      padding-inline: 0;
+    }
+  }
+</style>

@@ -1,0 +1,81 @@
+---
+import { Image } from 'astro:assets';
+import { getLocalImage } from '@/lib/images';
+
+interface Props {
+  /** File name under src/assets/images. Omit it for the empty variant. */
+  src?: string;
+  alt?: string;
+  /** Text shown by the empty variant (no `src`). */
+  emptyLabel?: string;
+  fit?: 'cover' | 'contain';
+  /** CSS aspect-ratio value such as `4/5`; the parent layout may size the tile instead. */
+  ratio?: string;
+  /** Small label pinned to the top-left corner. */
+  tag?: string;
+  zoom?: boolean;
+  loading?: 'lazy' | 'eager';
+  widths?: number[];
+  sizes?: string;
+  class?: string;
+}
+
+const {
+  src, alt = '', emptyLabel = '', fit = 'cover', ratio, tag, zoom = false,
+  loading = 'lazy', widths, sizes, class: className,
+} = Astro.props;
+const image = src === undefined ? undefined : getLocalImage(src);
+// astro:assets requires `sizes` whenever `widths` is set.
+const responsive = widths && sizes ? { widths, sizes } : {};
+---
+<div
+  class:list={['tile', { contain: fit === 'contain', empty: !image, zoom }, className]}
+  style={ratio ? `aspect-ratio:${ratio}` : undefined}
+>
+  {image ? <Image src={image} alt={alt} loading={loading} decoding="async" {...responsive} /> : emptyLabel}
+  {tag && <span class="tag">{tag}</span>}
+</div>
+
+<style>
+  .tile {
+    position: relative;
+    background: var(--color-tile);
+    overflow: hidden;
+  }
+  .tile :global(img) {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.6s ease;
+  }
+  .contain :global(img) {
+    object-fit: contain;
+  }
+  :global(a:hover) .tile:not(.contain) :global(img),
+  :global(a:focus-visible) .tile:not(.contain) :global(img) {
+    transform: scale(1.025);
+  }
+  .tag {
+    position: absolute;
+    left: 8px;
+    top: 8px;
+    padding: 2px 6px;
+    background: var(--color-surface);
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+  .empty {
+    display: grid;
+    place-items: center;
+    padding: 12px;
+    color: var(--color-muted);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    text-align: center;
+  }
+  .zoom {
+    cursor: zoom-in;
+  }
+</style>

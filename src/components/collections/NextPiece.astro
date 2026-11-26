@@ -1,0 +1,51 @@
+---
+import Tile from '@/components/ui/Tile.astro';
+import type { Locale } from '@/i18n/locales';
+import { childPath } from '@/i18n/routes';
+import type { Product } from '@/lib/products';
+import { copy } from './copy';
+
+interface Props {
+  product: Product;
+  locale: Locale;
+}
+const { product, locale } = Astro.props;
+const labels = copy[locale];
+const href = childPath('collections', locale, product.id);
+if (href === undefined) throw new Error(`[collections] No published listing for ${locale}.`);
+---
+<div class="next">
+  <div class="up">{labels.collection}: {labels.brand}</div>
+  <a {href}>
+    <div class="up label">{labels.next}</div>
+    <Tile src={product.images[0]} ratio="4/5" widths={[300, 600]} sizes="300px" />
+    <div class="up name">{product.name}</div>
+  </a>
+</div>
+
+<style>
+  .next {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 56px;
+    margin-top: 96px;
+    align-items: end;
+  }
+  a {
+    justify-self: end;
+    width: 100%;
+    max-width: 300px;
+  }
+  .label {
+    margin-bottom: 8px;
+  }
+  .name {
+    margin-top: 8px;
+  }
+  @media (max-width: 860px) {
+    .next {
+      grid-template-columns: 1fr;
+      gap: 28px;
+    }
+  }
+</style>

@@ -1,0 +1,63 @@
+---
+import { site } from '@/config/site';
+import type { Locale } from '@/i18n/locales';
+import { contactCopy } from './copy';
+
+interface Props { locale: Locale; title: string }
+const { locale, title } = Astro.props;
+const copy = contactCopy[locale];
+const { email, phone, phoneHref, address, hours } = site.contact;
+const hoursText = hours[locale];
+if (!hoursText) throw new Error(`[contact] Missing opening hours for ${locale}.`);
+// The prototype breaks the line before the city: "C/ Química, nave 42 · PEASS / Sevilla".
+const split = address.lastIndexOf(' · ');
+const street = split < 0 ? address : address.slice(0, split);
+const city = split < 0 ? '' : address.slice(split + 3);
+---
+<div>
+  <h1>{title}</h1>
+  <dl class="spec">
+    <dt>{copy.email}</dt>
+    <dd><a href={`mailto:${email}`}>{email}</a></dd>
+    <dt>{copy.phone}</dt>
+    <dd class="tabular-nums"><a href={phoneHref}>{phone}</a></dd>
+    <dt>{copy.workshop}</dt>
+    <dd>{street}{city && <><br />{city}</>}</dd>
+    <dt>{copy.hours}</dt>
+    <dd>{hoursText}</dd>
+  </dl>
+</div>
+
+<style>
+  h1 {
+    font-size: clamp(30px, 4vw, 48px);
+    line-height: 1.05;
+    margin-bottom: 28px;
+  }
+  .spec {
+    display: grid;
+    grid-template-columns: 150px 1fr;
+    margin: 0;
+    font-size: 11.5px;
+    border-top: 1px solid var(--color-brand);
+  }
+  dt,
+  dd {
+    margin: 0;
+    padding-block: 9px;
+    border-bottom: 1px solid var(--color-line);
+  }
+  dt {
+    font-size: 10.5px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+  a:hover {
+    opacity: 0.7;
+  }
+  @media (max-width: 520px) {
+    .spec {
+      grid-template-columns: 110px 1fr;
+    }
+  }
+</style>

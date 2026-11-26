@@ -11,17 +11,13 @@ export async function localizedProjectFixture() {
   const example = guide.match(/```astro\n([\s\S]*?)\n```/u)?.[1];
   assert.ok(example, 'Native Astro example must exist');
   return fixture(async ({ root, replace }) => {
-    await replace('src/i18n/locales.ts', "['es']", "['es', 'en']");
-    // Distinct stable fixture copy; do not depend on the starter's identity.
-    await writeFile(join(root, 'src/data/pages.ts'), `
-import type { Locale } from '../i18n/locales';
-export interface PageTranslation { slug: string; title: string; description: string; body: string }
-export interface Page { id: string; translations: Partial<Record<Locale, PageTranslation>> }
-export const pages: Page[] = [{ id: 'home', translations: {
+    // English is already enabled by the client defaults. The fixture registry replaces the
+    // client pages (kept below it, unused) so local copy never depends on the starter's identity.
+    await replace('src/data/pages.ts', 'export const pages: Page[] = [', `export const pages: Page[] = [{ id: 'home', translations: {
   es: { slug: '', title: 'Página local', description: 'Metadatos locales', body: 'Cuerpo local' },
   en: { slug: '', title: 'Local page', description: 'Local metadata', body: 'Local body' },
 } }];
-`);
+export const clientPages: Page[] = [`);
     for (const route of ['index.astro', '[...path].astro']) {
       await writeFile(join(root, 'src/pages', route), example);
     }

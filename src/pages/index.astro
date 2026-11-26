@@ -1,19 +1,36 @@
 ---
 import { site } from '@/config/site';
+import type { PageId } from '@/data/pages';
 import BaseLayout from '@/layouts/BaseLayout.astro';
-import LanguageSwitcher from '@/components/ui/LanguageSwitcher.astro';
+import CollectionsView from '@/components/collections/CollectionsView.astro';
+import ContactView from '@/components/contact/ContactView.astro';
+import HomeView from '@/components/home/HomeView.astro';
+import LegalView from '@/components/legal/LegalView.astro';
+import ProfileView from '@/components/profile/ProfileView.astro';
+import PageHead from '@/components/ui/PageHead.astro';
 import { publishedPages, type PublishedPage } from '@/i18n/pages';
 
 interface Props { page?: PublishedPage }
 // This root route also serves as the shared renderer for the rest route.
 const { page = publishedPages().find(({ path }) => path === '/')! } = Astro.props;
 const { content } = page;
+
+// Each view receives the page and owns everything below the shared layout. Projects are
+// rendered by their own server routes and ids without a view fall back to the page head.
+const views: Partial<Record<PageId, typeof HomeView>> = {
+  home: HomeView,
+  collections: CollectionsView,
+  profile: ProfileView,
+  contact: ContactView,
+  privacy: LegalView,
+  cookies: LegalView,
+  legal: LegalView,
+};
+const View = views[page.id];
 ---
 <BaseLayout page={page} title={content.title === site.name ? undefined : content.title}
   description={content.description}>
-  <main>
-    <h1>{content.title}</h1>
-    <p>{content.body}</p>
-    <LanguageSwitcher page={page} />
-  </main>
+  {View ? <View page={page} /> : (
+    <div class="wrap"><PageHead title={content.title} intro={content.body} /></div>
+  )}
 </BaseLayout>

@@ -1,0 +1,212 @@
+---
+import Tile from '@/components/ui/Tile.astro';
+import type { Locale } from '@/i18n/locales';
+import { homeCopy } from './copy';
+import type { HeroSlide } from './heroSlides';
+
+interface Props {
+  slides: HeroSlide[];
+  locale: Locale;
+  /** Where every slide leads: the localized projects listing. */
+  href: string;
+}
+
+const { slides, locale, href } = Astro.props;
+const copy = homeCopy[locale].hero;
+---
+{slides.length > 0 && (
+  <div
+    class="hero hs"
+    data-hero-slideshow
+    aria-roledescription={copy.roleDescription}
+    aria-label={copy.label}
+  >
+    {slides.map((slide, index) => (
+      <a
+        class:list={['hs-s', { on: index === 0 }]}
+        href={href}
+        aria-hidden={index !== 0}
+        tabindex={index === 0 ? 0 : -1}
+      >
+        <Tile
+          src={slide.image}
+          alt={slide.title}
+          loading={index === 0 ? 'eager' : 'lazy'}
+          widths={[640, 1024, 1600, 2200]}
+          sizes="100vw"
+        />
+        <div class="ov">
+          <div class="up hs-k">{slide.kicker}</div>
+          <h2>{slide.title}</h2>
+          {slide.studio && <p class="hs-a">{copy.architecture}: {slide.studio}</p>}
+        </div>
+      </a>
+    ))}
+    {slides.length > 1 && (
+      <div class="hs-dots">
+        {slides.map((slide, index) => (
+          <button
+            type="button"
+            class:list={{ on: index === 0 }}
+            data-hero-dot={index}
+            aria-label={slide.title}
+            aria-current={index === 0}
+          />
+        ))}
+      </div>
+    )}
+  </div>
+)}
+
+<style>
+  .hero {
+    position: relative;
+    aspect-ratio: 16 / 8;
+    max-height: 78vh;
+    width: 100%;
+    overflow: hidden;
+    background: var(--color-tile);
+  }
+  .hs-s {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    transition: opacity 0.7s ease;
+    pointer-events: none;
+    color: var(--color-on-photo);
+  }
+  .hs-s.on {
+    opacity: 1;
+    pointer-events: auto;
+  }
+  .hs-s :global(.tile) {
+    position: absolute;
+    inset: 0;
+  }
+  .hs-s::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(transparent 40%, var(--color-scrim-strong));
+    pointer-events: none;
+  }
+  .ov {
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    z-index: 2;
+    max-width: 640px;
+    padding: 28px 28px 58px;
+  }
+  h2 {
+    font-size: clamp(24px, 3.4vw, 42px);
+    line-height: 1.1;
+  }
+  .hs-k {
+    margin-bottom: 10px;
+    opacity: 0.85;
+  }
+  .hs-a {
+    margin-top: 10px;
+    font-size: 12px;
+    opacity: 0.9;
+  }
+  .hs-dots {
+    position: absolute;
+    left: 50%;
+    bottom: 18px;
+    transform: translateX(-50%);
+    z-index: 3;
+    display: flex;
+    gap: 6px;
+  }
+  .hs-dots button {
+    width: 32px;
+    height: 18px;
+    position: relative;
+  }
+  .hs-dots button::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 50%;
+    height: 2px;
+    background: var(--color-on-photo-dim);
+    transition: background 0.2s;
+  }
+  .hs-dots button.on::before,
+  .hs-dots button:hover::before {
+    background: var(--color-on-photo);
+  }
+  @media (max-width: 760px) {
+    .hero {
+      aspect-ratio: 4 / 5;
+    }
+    .ov {
+      padding: 20px 18px 52px;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .hs-s {
+      transition: none;
+    }
+  }
+</style>
+
+<script>
+  // Slides change only on visitor input (dots or swipe), as in the prototype.
+  const swipeThreshold = 40;
+
+  function setup(root: HTMLElement): void {
+    const slides = [...root.querySelectorAll<HTMLElement>('.hs-s')];
+    const dots = [...root.querySelectorAll<HTMLElement>('[data-hero-dot]')];
+    const count = slides.length;
+    if (count < 2) return;
+    let current = 0;
+    let touchX: number | null = null;
+    let swiped = false;
+
+    // Show one slide: only that slide is focusable and exposed to assistive technology.
+    function goTo(index: number): void {
+      current = ((index % count) + count) % count;
+      slides.forEach((slide, position) => {
+        const active = position === current;
+        slide.classList.toggle('on', active);
+        slide.setAttribute('aria-hidden', String(!active));
+        slide.tabIndex = active ? 0 : -1;
+      });
+      dots.forEach((dot, position) => {
+        dot.classList.toggle('on', position === current);
+        dot.setAttribute('aria-current', String(position === current));
+      });
+    }
+
+    dots.forEach((dot, position) => {
+      dot.addEventListener('click', () => goTo(position));
+    });
+
+    root.addEventListener('touchstart', (event) => {
+      touchX = event.touches[0]?.clientX ?? null;
+    }, { passive: true });
+    root.addEventListener('touchend', (event) => {
+      if (touchX === null) return;
+      const delta = (event.changedTouches[0]?.clientX ?? touchX) - touchX;
+      touchX = null;
+      if (Math.abs(delta) <= swipeThreshold) return;
+      // A swipe must not also follow the slide link.
+      swiped = true;
+      window.setTimeout(() => { swiped = false; }, 400);
+      goTo(current + (delta < 0 ? 1 : -1));
+    });
+    root.addEventListener('click', (event) => {
+      if (!swiped) return;
+      event.preventDefault();
+      event.stopPropagation();
+      swiped = false;
+    }, true);
+
+  }
+
+  document.querySelectorAll<HTMLElement>('[data-hero-slideshow]').forEach(setup);
+</script>

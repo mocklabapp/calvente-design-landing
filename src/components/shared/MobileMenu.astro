@@ -1,0 +1,234 @@
+---
+import { site } from '@/config/site';
+import type { PageId } from '@/data/pages';
+import type { Locale } from '@/i18n/locales';
+import { homeHref, menuItems } from '@/i18n/navigation';
+import type { Alternate } from '@/i18n/routes';
+import { ui } from '@/i18n/ui';
+import Icon from '@/components/ui/Icon.astro';
+import LanguageToggle from '@/components/ui/LanguageToggle.astro';
+import Logo from '@/components/ui/Logo.astro';
+import ThemeToggle from '@/components/ui/ThemeToggle.astro';
+import Tile from '@/components/ui/Tile.astro';
+
+interface Props {
+  locale: Locale;
+  current?: PageId;
+  alternates: Alternate[];
+}
+
+const { locale, current, alternates } = Astro.props;
+const labels = ui[locale];
+const { contact } = site;
+---
+<div id="mmenu" class="mmenu" role="dialog" aria-modal="true" aria-label={labels.menu} hidden>
+  <div class="top">
+    <a class="brand" href={homeHref(locale)} aria-label={labels.homeLink}><Logo width={142} /></a>
+    <button type="button" class="close" data-menu-close aria-label={labels.close}><Icon name="x" /></button>
+  </div>
+  <div class="intro">
+    <p>{labels.footer}</p>
+    <Tile src="jo0285-001.jpg" ratio="4/5" widths={[184, 276]} sizes="92px" />
+  </div>
+  <nav class="links" aria-label={labels.mainNavigation}>
+    {menuItems(locale, current).map((item) => (
+      <a href={item.href} aria-current={item.current ? 'page' : undefined}>
+        <span>{item.label}</span><Icon name="arrow" />
+      </a>
+    ))}
+  </nav>
+  <div class="tools">
+    <LanguageToggle locale={locale} alternates={alternates} />
+    <ThemeToggle locale={locale} />
+  </div>
+  <div class="contact">
+    <p class="heading">{labels.contactHeading}:<br /><a href={`mailto:${contact.email}`}>{contact.email}</a></p>
+    <p><a class="tabular-nums" href={contact.phoneHref}>{contact.phone}</a></p>
+    <p>{contact.address}</p>
+  </div>
+  <div class="icons">
+    <button type="button" data-toast={labels.toastInstagram} aria-label="Instagram"><Icon name="instagram" /></button>
+    <button type="button" data-toast={labels.toastLinkedin} aria-label="LinkedIn"><Icon name="linkedin" /></button>
+    <a href={`mailto:${contact.email}`} aria-label={labels.emailLabel}><Icon name="mail" /></a>
+    <a class="highlight" href={contact.whatsappUrl} target="_blank" rel="noopener" aria-label={labels.whatsappLabel}>
+      <Icon name="whatsapp" />
+    </a>
+  </div>
+</div>
+
+<style>
+  .mmenu {
+    display: none;
+  }
+  @media (max-width: 760px) {
+    :global(html.mob-lock),
+    :global(html.mob-lock body) {
+      overflow: hidden;
+    }
+    .mmenu {
+      display: flex;
+      flex-direction: column;
+      position: fixed;
+      inset: 0;
+      z-index: 90;
+      overflow-y: auto;
+      padding-top: env(safe-area-inset-top, 0px);
+      background: var(--color-canvas);
+      color: var(--color-brand);
+    }
+    .top {
+      display: flex;
+      flex: none;
+      height: 56px;
+      border-bottom: 1px solid var(--color-brand);
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      flex: 1;
+      min-width: 0;
+      padding: 0 max(16px, env(safe-area-inset-left, 0px));
+    }
+    .close {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 58px;
+      border-left: 1px solid var(--color-brand);
+      background: var(--color-canvas-alt);
+    }
+    .intro {
+      display: grid;
+      grid-template-columns: 1fr 92px;
+      gap: 18px;
+      align-items: start;
+      padding: 22px max(20px, env(safe-area-inset-right, 0px)) 22px max(20px, env(safe-area-inset-left, 0px));
+      border-bottom: 1px solid var(--color-brand);
+      font-size: 12px;
+      line-height: 1.75;
+    }
+    .links {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0 20px;
+      padding: 14px max(20px, env(safe-area-inset-right, 0px)) 22px max(20px, env(safe-area-inset-left, 0px));
+      border-bottom: 1px solid var(--color-brand);
+    }
+    .links a {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      min-width: 0;
+      padding: 16px 0 12px;
+      border-bottom: 1px dashed var(--color-brand);
+      font-size: 11.5px;
+      text-transform: uppercase;
+      letter-spacing: 0.2em;
+    }
+    .links span {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .links a :global(.ico) {
+      flex: none;
+      width: 15px;
+      height: 15px;
+    }
+    .links a[aria-current='page'] span {
+      text-decoration: underline;
+      text-underline-offset: 4px;
+    }
+    .tools {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      padding: 14px max(20px, env(safe-area-inset-right, 0px)) 14px max(20px, env(safe-area-inset-left, 0px));
+      border-bottom: 1px solid var(--color-brand);
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+    }
+    .tools :global(button) {
+      padding: 4px 0;
+      letter-spacing: inherit;
+      text-transform: inherit;
+    }
+    .contact {
+      display: grid;
+      gap: 6px;
+      padding: 22px max(20px, env(safe-area-inset-right, 0px)) 26px max(20px, env(safe-area-inset-left, 0px));
+      border-bottom: 1px solid var(--color-brand);
+      font-size: 13px;
+      line-height: 1.45;
+    }
+    .heading {
+      margin-bottom: 4px;
+      font-size: 17px;
+      line-height: 1.35;
+      word-break: break-word;
+    }
+    .icons {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      flex: none;
+      margin-top: auto;
+      padding-bottom: env(safe-area-inset-bottom, 0px);
+      border-top: 1px solid var(--color-brand);
+    }
+    .icons > * {
+      display: grid;
+      place-items: center;
+      height: 64px;
+      border-left: 1px solid var(--color-brand);
+      color: var(--color-brand);
+      background: none;
+    }
+    .icons > :first-child {
+      border-left: 0;
+    }
+    .icons :global(.ico) {
+      width: 22px;
+      height: 22px;
+    }
+    .icons .highlight {
+      background: var(--color-brand);
+      color: var(--color-on-brand);
+    }
+  }
+</style>
+
+<script>
+  const menu = document.getElementById('mmenu');
+  const openers = document.querySelectorAll<HTMLElement>('[data-menu-open]');
+  const closers = menu?.querySelectorAll<HTMLElement>('[data-menu-close]') ?? [];
+  const desktop = window.matchMedia('(min-width: 761px)');
+  let opener: HTMLElement | undefined;
+
+  const setOpen = (open: boolean) => {
+    if (!menu || menu.hidden === !open) return;
+    menu.hidden = !open;
+    document.documentElement.classList.toggle('mob-lock', open);
+    for (const button of openers) button.setAttribute('aria-expanded', String(open));
+    // Move focus into the dialog and give it back to the button that opened it.
+    if (open) menu.querySelector<HTMLElement>('[data-menu-close]')?.focus();
+    else opener?.focus();
+  };
+
+  for (const button of openers) {
+    button.addEventListener('click', () => {
+      opener = button;
+      setOpen(true);
+    });
+  }
+  for (const button of closers) button.addEventListener('click', () => setOpen(false));
+  document.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape') setOpen(false);
+  });
+  // Leaving the mobile layout while the overlay is open would strand the scroll lock.
+  desktop.addEventListener('change', (event) => {
+    if (event.matches) setOpen(false);
+  });
+</script>

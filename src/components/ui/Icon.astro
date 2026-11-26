@@ -1,0 +1,42 @@
+---
+// Line icons from the approved prototype. Markup is static and authored here.
+interface IconDefinition {
+  viewBox: string;
+  body: string;
+  size?: [number, number];
+}
+
+const icons = {
+  menu: { viewBox: '0 0 22 14', size: [22, 14], body: '<path d="M0 1h22M0 7h22M0 13h22"/>' },
+  x: { viewBox: '0 0 16 16', body: '<path d="M3 3l10 10M13 3L3 13"/>' },
+  arrow: { viewBox: '0 0 16 16', body: '<path d="M4 12L12 4M5.5 4H12v6.5"/>' },
+  instagram: {
+    viewBox: '0 0 16 16',
+    body: '<rect x="2" y="2" width="12" height="12" rx="3.5"/><circle cx="8" cy="8" r="2.8"/><circle cx="11.6" cy="4.4" r=".5"/>',
+  },
+  linkedin: {
+    viewBox: '0 0 16 16',
+    body: '<rect x="2" y="2" width="12" height="12" rx="2"/><path d="M5 7v4.5M5 4.6v.1M7.6 11.5V7m0 2c0-1.3.8-2 1.8-2s1.6.6 1.6 2v2.5"/>',
+  },
+  mail: { viewBox: '0 0 16 16', body: '<rect x="1.5" y="3.5" width="13" height="9"/><path d="M1.5 3.5L8 9l6.5-5.5"/>' },
+  whatsapp: {
+    viewBox: '0 0 16 16',
+    body: '<path d="M2.2 13.8l.8-2.9A6 6 0 1 1 5.1 13z"/><path d="M6 5.3c.2-.4.6-.4.8 0l.5 1.1-.6.7c.4.9 1.1 1.6 2 2l.7-.6 1.1.5c.4.2.4.6 0 .8-.6.5-1.4.6-2.2.2A6 6 0 0 1 6 6.9c-.3-.6-.3-1.2 0-1.6z"/>',
+  },
+} satisfies Record<string, IconDefinition>;
+
+interface Props {
+  name: keyof typeof icons;
+}
+
+const { name } = Astro.props;
+const { viewBox, body, size }: IconDefinition = icons[name];
+---
+<svg
+  class="ico"
+  viewBox={viewBox}
+  style={size ? `width:${size[0]}px;height:${size[1]}px` : undefined}
+  aria-hidden="true"
+  focusable="false"
+  set:html={body}
+/>

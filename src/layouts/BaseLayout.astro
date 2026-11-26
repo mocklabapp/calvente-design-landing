@@ -1,41 +1,72 @@
 ---
-import { site } from '@/config/site';
 import '@/styles/global.css';
-import { equivalents, locales, type PublishedPage } from '@/i18n/pages';
-import { defaultLocale } from '@/i18n/locales';
+import { site } from '@/config/site';
+import type { PageId } from '@/data/pages';
+import { defaultLocale, locales, type Locale } from '@/i18n/locales';
+import type { PublishedPage } from '@/i18n/pages';
+import { alternatesFor, type Alternate } from '@/i18n/routes';
+import { ui } from '@/i18n/ui';
+import { prefsStorageKey } from '@/lib/theme';
+import MobileHeader from '@/components/shared/MobileHeader.astro';
+import SiteFooter from '@/components/shared/SiteFooter.astro';
+import SiteHeader from '@/components/shared/SiteHeader.astro';
+import Toast from '@/components/shared/Toast.astro';
 
+// Pass a registry `page`, or an explicit `locale` plus `alternates` for pages that are
+// not registry entries (such as a product or project detail).
 interface Props {
   title?: string;
   description?: string;
   page?: PublishedPage;
+  locale?: Locale;
+  alternates?: Alternate[];
+  /** Section highlighted in the navigation; defaults to the registry page. */
+  current?: PageId;
 }
 
-const { title, description = site.description, page } = Astro.props;
+const { title, page, current = page?.id } = Astro.props;
+const localeId = page?.locale ?? Astro.props.locale ?? defaultLocale;
+const alternates = page ? alternatesFor(page.id) : (Astro.props.alternates ?? []);
+const { description = ui[localeId].footer } = Astro.props;
 const pageTitle = title ? `${title} | ${site.name}` : site.name;
-const locale = locales[page?.locale ?? defaultLocale];
-const canonical = Astro.site ? new URL(page?.path ?? Astro.url.pathname, Astro.site) : undefined;
-const alternates = page && Astro.site ? equivalents(page) : [];
+const language = locales[localeId];
+const path = page?.path ?? alternates.find((alternate) => alternate.locale === localeId)?.path ?? Astro.url.pathname;
+const canonical = Astro.site ? new URL(path, Astro.site) : undefined;
+const hreflangs = Astro.site ? alternates : [];
 ---
 
 <!doctype html>
-<html lang={locale.lang} dir={locale.dir}>
+<html lang={language.lang} dir={language.dir}>
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <meta name="description" content={description} />
     <meta name="generator" content={Astro.generator} />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <title>{pageTitle}</title>
     {canonical && <link rel="canonical" href={canonical} />}
-    {alternates.map((alternate) => (
+    {hreflangs.map((alternate) => (
       <link rel="alternate" hreflang={locales[alternate.locale].lang}
         href={new URL(alternate.path, Astro.site!)} />
     ))}
-    {alternates.filter(({ locale }) => locale === defaultLocale).map((alternate) => (
+    {hreflangs.filter((alternate) => alternate.locale === defaultLocale).map((alternate) => (
       <link rel="alternate" hreflang="x-default" href={new URL(alternate.path, Astro.site!)} />
     ))}
+    <!-- Applies a saved theme before first paint; without one the site stays light. -->
+    <script is:inline define:vars={{ storageKey: prefsStorageKey }}>
+      try {
+        const saved = JSON.parse(localStorage.getItem(storageKey) || '{}').theme;
+        if (saved === 'dark' || saved === 'light') document.documentElement.dataset.theme = saved;
+      } catch {}
+    </script>
   </head>
-  <body class="bg-canvas font-sans text-ink">
-    <slot />
+  <body class="bg-canvas font-mono text-ink">
+    <SiteHeader locale={localeId} current={current} alternates={alternates} />
+    <MobileHeader locale={localeId} current={current} alternates={alternates} />
+    <main id="main">
+      <slot />
+    </main>
+    <SiteFooter locale={localeId} current={current} />
+    <Toast />
   </body>
 </html>

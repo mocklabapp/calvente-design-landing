@@ -1,0 +1,25 @@
+---
+import { site } from '@/config/site';
+
+interface Props {
+  /** Rendered width in pixels; the 254:28 ratio is fixed by the artwork. */
+  width?: number;
+  label?: string;
+}
+
+const { width = 150, label = site.name } = Astro.props;
+---
+<span class="logo" role="img" aria-label={label} style={`width:${width}px`}></span>
+
+<style>
+  /* The wordmark is a PNG used as a mask so it follows the brand color in both themes. */
+  .logo {
+    display: inline-block;
+    max-width: 100%;
+    aspect-ratio: 254 / 28;
+    background: var(--color-brand);
+    -webkit-mask: url('../../assets/logo.png') left center / contain no-repeat;
+    mask: url('../../assets/logo.png') left center / contain no-repeat;
+    vertical-align: middle;
+  }
+</style>

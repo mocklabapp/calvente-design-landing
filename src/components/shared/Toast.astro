@@ -1,0 +1,54 @@
+---
+// Single live region for short notices. Trigger it with `data-toast="message"` on a
+// clickable element, `data-toast-submit="message"` on a form (submission is cancelled),
+// or by dispatching a `cd:toast` CustomEvent whose detail is the message.
+---
+<div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+
+<style>
+  .toast {
+    position: fixed;
+    left: 50%;
+    bottom: calc(22px + env(safe-area-inset-bottom, 0px));
+    transform: translateX(-50%);
+    z-index: 90;
+    max-width: min(520px, calc(100% - 32px));
+    padding: 10px 16px;
+    background: var(--color-inverse);
+    color: var(--color-on-inverse);
+    font: 500 12px var(--font-sans);
+    text-align: center;
+    box-shadow: 0 8px 24px var(--color-toast-shadow);
+  }
+</style>
+
+<script>
+  const toast = document.getElementById('toast');
+  let timer: number | undefined;
+
+  const show = (message: string) => {
+    if (!toast || !message) return;
+    toast.textContent = message;
+    toast.hidden = false;
+    window.clearTimeout(timer);
+    timer = window.setTimeout(() => {
+      toast.hidden = true;
+    }, 3200);
+  };
+
+  document.addEventListener('click', (event) => {
+    if (!(event.target instanceof Element)) return;
+    show(event.target.closest<HTMLElement>('[data-toast]')?.dataset.toast ?? '');
+  });
+
+  document.addEventListener('submit', (event) => {
+    const form = event.target;
+    if (!(form instanceof HTMLFormElement) || form.dataset.toastSubmit === undefined) return;
+    event.preventDefault();
+    show(form.dataset.toastSubmit);
+  });
+
+  document.addEventListener('cd:toast', (event) => {
+    if (event instanceof CustomEvent && typeof event.detail === 'string') show(event.detail);
+  });
+</script>

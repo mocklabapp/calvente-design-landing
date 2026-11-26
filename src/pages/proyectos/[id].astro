@@ -1,0 +1,14 @@
+---
+import ProjectDetailPage from '@/components/projects/ProjectDetailPage.astro';
+import { applyNoStore, detailStatus, loadProjects, projectsPage } from '@/components/projects/data';
+
+export const prerender = false;
+
+applyNoStore(Astro.response.headers);
+const page = projectsPage('es');
+if (!page) return new Response('Not found', { status: 404, headers: Astro.response.headers });
+const result = await loadProjects();
+const project = result.ok ? result.projects.find(({ id }) => id === Astro.params.id) : undefined;
+Astro.response.status = detailStatus(result, project);
+---
+<ProjectDetailPage page={page} result={result} project={project} />

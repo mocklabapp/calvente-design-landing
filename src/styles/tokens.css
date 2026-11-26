@@ -1,15 +1,118 @@
-/* Neutral technical defaults, not a client-approved brand palette.
-   Resolve the client's visual identity before changing these shared tokens. */
+/* Calvente Design palette (approved prototype values, light and dark).
+   Raw colors live only in this file. Components consume the semantic
+   `--color-*` tokens declared in @theme below. The manual toggle sets
+   `data-theme` on <html>; without it the light #F5EFE4 canvas applies,
+   regardless of the operating system preference (approved default). */
+:root {
+  color-scheme: light;
+  --cd-bg: #f5efe4;
+  --cd-bg2: #ece4d5;
+  --cd-paper: #faf6ee;
+  --cd-tile: #e9e2d5;
+  --cd-fg: #8a3517;
+  --cd-fg2: #a4603f;
+  --cd-ink: #2d2d23;
+  --cd-muted: #7c7458;
+  --cd-oak: #b48954;
+  --cd-line: rgb(138 53 23 / 0.32);
+  --cd-line2: rgb(45 45 35 / 0.14);
+  --cd-ok: #4f6b3a;
+  --cd-warn: #a8741a;
+  --cd-bad: #9c2b1e;
+  --cd-info: #3f5c72;
+  /* Photo overlays, scrims and lightbox chrome stay the same in both themes. */
+  --cd-on-photo: #f6efe3;
+  --cd-on-photo-line: rgb(246 239 227 / 0.5);
+  --cd-on-photo-dim: rgb(246 239 227 / 0.45);
+  --cd-scrim-soft: rgb(25 20 16 / 0.3);
+  --cd-scrim: rgb(25 20 16 / 0.55);
+  --cd-scrim-strong: rgb(25 20 16 / 0.62);
+  --cd-caption-scrim: rgb(30 25 20 / 0.55);
+  --cd-lightbox-backdrop: rgb(20 16 12 / 0.38);
+  --cd-lightbox-control: rgb(250 246 238 / 0.9);
+  --cd-lightbox-control-hover: #faf6ee;
+  --cd-on-lightbox-control: #2d2d23;
+  --cd-lightbox-shadow: rgb(0 0 0 / 0.35);
+  --cd-toast-shadow: rgb(0 0 0 / 0.2);
+  /* Placeholder portrait ("FOTO PENDIENTE") until the client supplies a photo. */
+  --cd-portrait-bg: #854628;
+  --cd-portrait-skin: #e7c9a8;
+  --cd-portrait-hair: #3a2a1e;
+  --cd-portrait-body: #2d2d23;
+}
+
+:root[data-theme='dark'] {
+  color-scheme: dark;
+  --cd-bg: #1e1b16;
+  --cd-bg2: #29251e;
+  --cd-paper: #25211b;
+  --cd-tile: #2e2a22;
+  --cd-fg: #e38c68;
+  --cd-fg2: #c98564;
+  --cd-ink: #ece4d6;
+  --cd-muted: #aba282;
+  --cd-oak: #c99b63;
+  --cd-line: rgb(227 140 104 / 0.3);
+  --cd-line2: rgb(236 228 214 / 0.14);
+  --cd-ok: #93b176;
+  --cd-warn: #d8a64a;
+  --cd-bad: #e07a68;
+  --cd-info: #86a9c4;
+}
+
 @theme static {
   --color-*: initial;
 
-  --color-canvas: #fff;
-  --color-ink: #000;
-  --color-surface: var(--color-canvas);
-  --color-muted: color-mix(in oklab, var(--color-ink) 65%, var(--color-canvas));
-  --color-line: color-mix(in oklab, var(--color-ink) 15%, var(--color-canvas));
-  --color-brand: var(--color-ink);
-  --color-on-brand: var(--color-canvas);
+  /* Surfaces */
+  --color-canvas: var(--cd-bg);
+  --color-canvas-alt: var(--cd-bg2);
+  --color-surface: var(--cd-paper);
+  --color-tile: var(--cd-tile);
 
-  --font-sans: system-ui, sans-serif;
+  /* Text and brand: the web's terracotta carries text, logo, rules and buttons. */
+  --color-ink: var(--cd-fg);
+  --color-muted: var(--cd-fg2);
+  --color-brand: var(--cd-fg);
+  --color-on-brand: var(--cd-bg);
+
+  /* Lines */
+  --color-line: var(--cd-line);
+  --color-line-soft: var(--cd-line2);
+
+  /* Neutral inverse (toast): dark ink on light, light ink on dark. */
+  --color-inverse: var(--cd-ink);
+  --color-on-inverse: var(--cd-bg);
+
+  /* Prototype accents and status colors */
+  --color-oak: var(--cd-oak);
+  --color-stone: var(--cd-muted);
+  --color-ok: var(--cd-ok);
+  --color-warn: var(--cd-warn);
+  --color-bad: var(--cd-bad);
+  --color-info: var(--cd-info);
+
+  /* Photo overlays and lightbox */
+  --color-on-photo: var(--cd-on-photo);
+  --color-on-photo-line: var(--cd-on-photo-line);
+  --color-on-photo-dim: var(--cd-on-photo-dim);
+  --color-scrim-soft: var(--cd-scrim-soft);
+  --color-scrim: var(--cd-scrim);
+  --color-scrim-strong: var(--cd-scrim-strong);
+  --color-caption-scrim: var(--cd-caption-scrim);
+  --color-lightbox-backdrop: var(--cd-lightbox-backdrop);
+  --color-lightbox-control: var(--cd-lightbox-control);
+  --color-lightbox-control-hover: var(--cd-lightbox-control-hover);
+  --color-on-lightbox-control: var(--cd-on-lightbox-control);
+  --color-lightbox-shadow: var(--cd-lightbox-shadow);
+  --color-toast-shadow: var(--cd-toast-shadow);
+  --color-portrait-bg: var(--cd-portrait-bg);
+  --color-portrait-skin: var(--cd-portrait-skin);
+  --color-portrait-hair: var(--cd-portrait-hair);
+  --color-portrait-body: var(--cd-portrait-body);
+
+  /* Typography roles: mono body, sans UI, serif accents, logo face. */
+  --font-mono: 'IBM Plex Mono', ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace;
+  --font-sans: 'IBM Plex Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-serif: 'EB Garamond', Garamond, 'Times New Roman', serif;
+  --font-logo: 'Jost', 'Futura', 'Century Gothic', sans-serif;
 }

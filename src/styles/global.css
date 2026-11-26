@@ -1,8 +1,161 @@
 @import 'tailwindcss';
+@import './fonts.css';
 @import './tokens.css';
 
+/* Base rules ported from the approved prototype. Preflight owns the reset. */
 @layer base {
-  :root {
-    color-scheme: light;
+  html {
+    scroll-padding-top: env(safe-area-inset-top, 0px);
+  }
+
+  body {
+    margin: 0;
+    background: var(--color-canvas);
+    color: var(--color-ink);
+    font: 400 13px/1.55 var(--font-mono);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* Covers the notch area so sticky headers never show content above them. */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0 0 auto;
+    height: env(safe-area-inset-top, 0px);
+    z-index: 30;
+    background: var(--color-canvas);
+  }
+
+  a {
+    color: inherit;
+    text-decoration: none;
+  }
+
+  button {
+    font: inherit;
+    color: inherit;
+    background: none;
+    border: 0;
+    cursor: pointer;
+    padding: 0;
+  }
+
+  input,
+  select,
+  textarea {
+    font: inherit;
+    color: inherit;
+  }
+
+  :focus-visible {
+    outline: 1.5px solid var(--color-brand);
+    outline-offset: 2px;
+  }
+
+  h1,
+  h2,
+  h3 {
+    font-weight: 400;
+    margin: 0;
+    text-wrap: balance;
+  }
+
+  p {
+    margin: 0;
+  }
+
+  ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  ::before,
+  ::after {
+    transition: none !important;
+  }
+}
+
+/* Shared helpers repeated across the prototype's pages and sections. */
+
+/* Small uppercase label. */
+@utility up {
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-size: 11px;
+}
+
+/* Small body text. */
+@utility fine {
+  font-size: 11px;
+}
+
+/* Horizontal page gutter that respects device safe areas. */
+@utility wrap {
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+
+/* Serif italic accent inside uppercase or mono text. */
+@utility it {
+  font-family: var(--font-serif);
+  font-style: italic;
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+/* Line icon drawn with the current text color. */
+@utility ico {
+  width: 16px;
+  height: 16px;
+  stroke: currentColor;
+  fill: none;
+  stroke-width: 1.2;
+}
+
+/* Underlined inline link. */
+@utility lnk {
+  border-bottom: 1px solid var(--color-line);
+
+  &:hover {
+    border-color: var(--color-brand);
+  }
+}
+
+/* Outlined button; combine with `btn-solid` for the filled variant. */
+@utility btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border: 1px solid var(--color-brand);
+  padding: 10px 16px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-size: 11px;
+  transition:
+    background 0.2s,
+    color 0.2s;
+
+  &:hover {
+    background: var(--color-brand);
+    color: var(--color-on-brand);
+  }
+
+  &[disabled] {
+    opacity: 0.4;
+    pointer-events: none;
+  }
+}
+
+@utility btn-solid {
+  background: var(--color-brand);
+  color: var(--color-on-brand);
+
+  &:hover {
+    opacity: 0.88;
   }
 }

@@ -1,0 +1,76 @@
+---
+import type { Locale } from '@/i18n/locales';
+import { filters, products } from './catalog';
+import { copy } from './copy';
+
+interface Props { locale: Locale }
+const { locale } = Astro.props;
+const labels = copy[locale];
+---
+<div class="fbar up" role="group" aria-label={labels.filterLabel}>
+  <button class="chip" type="button" data-filter="all" aria-pressed="true">{labels.all}</button>
+  {filters.map(({ group, count, categories }) => (
+    <div class="grp">
+      <button class="chip" type="button" data-filter={`g-${group.id}`} aria-pressed="false">
+        <b>{group.label[locale]}</b><span class="c">{count}</span>
+      </button>
+      {categories.map(({ category, count: total }) => (
+        <button class="chip" type="button" data-filter={category.id} aria-pressed="false">
+          {category.label[locale]}<span class="c">{total}</span>
+        </button>
+      ))}
+    </div>
+  ))}
+  <div class="end">
+    <span class="num" aria-live="polite"><span data-count>{products.length}</span> {labels.items}</span>
+  </div>
+</div>
+
+<style>
+  .fbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px 22px;
+    align-items: center;
+    padding-block: 12px;
+    border-top: 1px solid var(--color-line);
+    border-bottom: 1px solid var(--color-line);
+    margin-bottom: 28px;
+    letter-spacing: 0.05em;
+  }
+  .grp {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 14px;
+    align-items: center;
+  }
+  .grp b {
+    font-weight: 500;
+  }
+  .chip {
+    padding-block: 2px;
+    border-bottom: 1px solid transparent;
+    color: var(--color-muted);
+  }
+  .chip[aria-pressed='true'] {
+    color: var(--color-ink);
+    border-color: var(--color-ink);
+  }
+  .chip:hover {
+    color: var(--color-ink);
+  }
+  .c {
+    font-size: 9px;
+    vertical-align: super;
+    margin-left: 2px;
+  }
+  .end {
+    margin-left: auto;
+    display: flex;
+    gap: 14px;
+    align-items: center;
+  }
+  .num {
+    font-variant-numeric: tabular-nums;
+  }
+</style>

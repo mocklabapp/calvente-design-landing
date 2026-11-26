@@ -1,0 +1,48 @@
+---
+import type { PublishedPage } from '@/i18n/pages';
+import PageHead from '@/components/ui/PageHead.astro';
+import { legalCopy, legalSectionCount } from './copy';
+
+interface Props { page: PublishedPage }
+const { page } = Astro.props;
+const copy = legalCopy[page.locale];
+const sections = Array.from({ length: legalSectionCount }, (_, index) => index + 1);
+---
+<div class="wrap">
+  <PageHead title={page.content.title} intro={page.content.body} />
+  <p class="notice" role="note" data-legal-placeholder>{copy.notice}</p>
+  <div class="text">
+    {sections.map((number) => (
+      <section>
+        <h2>{copy.section} {number}</h2>
+        {copy.paragraphs.map((paragraph) => <p>{paragraph}</p>)}
+      </section>
+    ))}
+  </div>
+</div>
+
+<style>
+  .notice {
+    max-width: 72ch;
+    padding: 10px 14px;
+    border: 1px dashed var(--color-brand);
+    font-size: 11.5px;
+  }
+  .text {
+    display: grid;
+    gap: 32px;
+    max-width: 72ch;
+    margin-top: 40px;
+  }
+  section {
+    display: grid;
+    gap: 12px;
+    font-size: 12.5px;
+  }
+  h2 {
+    font-size: 11px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+</style>

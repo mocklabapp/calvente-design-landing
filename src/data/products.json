@@ -1,0 +1,129 @@
+{
+  "groups": [
+    {"id": "mob", "label": {"es": "Mobiliario", "en": "Furniture"}},
+    {"id": "ilu", "label": {"es": "Iluminación", "en": "Lighting"}}
+  ],
+  "categories": [
+    {"id": "mesas", "group": "mob", "label": {"es": "Mesas", "en": "Tables"}},
+    {"id": "sillas", "group": "mob", "label": {"es": "Sillas", "en": "Chairs"}},
+    {"id": "almacenaje", "group": "mob", "label": {"es": "Almacenaje", "en": "Storage"}},
+    {"id": "accesorios", "group": "mob", "label": {"es": "Accesorios", "en": "Accessories"}},
+    {"id": "pie", "group": "ilu", "label": {"es": "Lámparas de pie", "en": "Floor lamps"}},
+    {"id": "techo", "group": "ilu", "label": {"es": "Lámparas de techo", "en": "Ceiling lamps"}},
+    {"id": "escritorio", "group": "ilu", "label": {"es": "Lámparas de escritorio", "en": "Desk lamps"}}
+  ],
+  "products": [
+    {
+      "id": "mesa-arco",
+      "code": "CD-M01",
+      "name": "Arco",
+      "category": "mesas",
+      "year": 2023,
+      "description": {"es": "Mesa de trabajo o comedor con patas curvas laminadas. El canto del tablero se rebaja para que parezca más fino de lo que es.", "en": "Work or dining table with laminated curved legs. The top edge is chamfered so it reads thinner than it is."},
+      "short": {"es": "Mesa de roble con patas curvas", "en": "Oak table with curved legs"},
+      "images": ["jo0361-001.jpg", "jo0361-016.jpg", "jo0361-028.jpg", "jo0361-037.jpg"],
+      "sizes": [{"es": "160 × 80 cm", "en": "160 × 80 cm"}, {"es": "180 × 90 cm", "en": "180 × 90 cm"}, {"es": "220 × 100 cm", "en": "220 × 100 cm"}],
+      "height": "75 cm",
+      "weight": "38 kg",
+      "elec": false
+    },
+    {
+      "id": "silla-hilo",
+      "code": "CD-S01",
+      "name": "Hilo",
+      "category": "sillas",
+      "year": 2022,
+      "description": {"es": "Silla de estructura maciza con respaldo y asiento tejidos con cordón de colores. Cada tejido es distinto.", "en": "Solid-wood chair with back and seat woven in coloured cord. Every weave is different."},
+      "short": {"es": "Silla con tejido de cordón", "en": "Chair with woven cord"},
+      "images": ["jo0285-035.jpg", "jo0285-029.jpg", "jo0285-045.jpg", "jo0285-031.jpg"],
+      "sizes": [{"es": "Asiento 45 cm", "en": "Seat 45 cm"}, {"es": "Asiento 65 cm · taburete", "en": "Seat 65 cm · stool"}, {"es": "Asiento 75 cm · barra", "en": "Seat 75 cm · bar"}],
+      "height": "92 cm",
+      "weight": "6 kg",
+      "elec": false
+    },
+    {
+      "id": "mesa-aspa",
+      "code": "CD-M02",
+      "name": "Aspa",
+      "category": "mesas",
+      "year": 2021,
+      "description": {"es": "Mesa de comedor con patas inclinadas que se ensamblan al tablero a media madera, sin herrajes vistos.", "en": "Dining table with raked legs half-lapped into the top, with no visible hardware."},
+      "short": {"es": "Mesa de fresno con patas en aspa", "en": "Ash table with raked legs"},
+      "images": ["jo0122-025.jpg", "jo0122-028.jpg", "jo0122-031.jpg"],
+      "sizes": [{"es": "180 × 90 cm", "en": "180 × 90 cm"}, {"es": "200 × 100 cm", "en": "200 × 100 cm"}, {"es": "240 × 100 cm", "en": "240 × 100 cm"}],
+      "height": "75 cm",
+      "weight": "42 kg",
+      "elec": false
+    },
+    {
+      "id": "aparador-linea",
+      "code": "CD-A01",
+      "name": "Línea",
+      "category": "almacenaje",
+      "year": 2021,
+      "description": {"es": "Aparador con frentes enrasados y tirador integrado en el canto. Interior con baldas regulables y cajones.", "en": "Sideboard with flush fronts and a pull cut into the edge. Adjustable shelves and drawers inside."},
+      "short": {"es": "Aparador de frentes enrasados", "en": "Flush-front sideboard"},
+      "images": ["jo0122-043.jpg", "jo0122-034.jpg", "jo0122-046.jpg"],
+      "sizes": [{"es": "160 × 45 × 75 cm", "en": "160 × 45 × 75 cm"}, {"es": "200 × 45 × 75 cm", "en": "200 × 45 × 75 cm"}, {"es": "240 × 45 × 75 cm", "en": "240 × 45 × 75 cm"}],
+      "height": "75 cm",
+      "weight": "55 kg",
+      "elec": false
+    },
+    {
+      "id": "lampara-grua",
+      "code": "CD-L01",
+      "name": "Grúa",
+      "category": "pie",
+      "year": 2022,
+      "description": {"es": "Lámpara de pie con brazo de madera que pivota sobre el mástil. Pantalla de tela en tambor.", "en": "Floor lamp with a wooden arm that pivots on the mast. Fabric drum shade."},
+      "short": {"es": "Lámpara de pie con brazo pivotante", "en": "Floor lamp with pivoting arm"},
+      "images": ["jo0122-097.jpg", "jo0122-094.jpg", "jo0122-103.jpg", "jo0122-100.jpg"],
+      "sizes": [{"es": "Altura 150 cm", "en": "Height 150 cm"}, {"es": "Altura 170 cm", "en": "Height 170 cm"}, {"es": "Altura 190 cm", "en": "Height 190 cm"}],
+      "height": "150–190 cm",
+      "weight": "7 kg",
+      "elec": true
+    },
+    {
+      "id": "galan-percha",
+      "code": "CD-X01",
+      "name": "Percha",
+      "category": "accesorios",
+      "year": 2022,
+      "description": {"es": "Galán de noche con bandeja inferior y bastidor de madera maciza. Se puede encargar en dos maderas combinadas.", "en": "Valet stand with lower tray and solid-wood frame. Available in two combined woods."},
+      "short": {"es": "Galán de noche", "en": "Valet stand"},
+      "images": ["jo0122-082.jpg", "jo0122-079.jpg", "jo0122-073.jpg"],
+      "sizes": [{"es": "Altura 110 cm", "en": "Height 110 cm"}, {"es": "Altura 130 cm", "en": "Height 130 cm"}, {"es": "Altura 150 cm", "en": "Height 150 cm"}],
+      "height": "110–150 cm",
+      "weight": "5 kg",
+      "elec": false
+    },
+    {
+      "id": "mesa-vidrio",
+      "code": "CD-M03",
+      "name": "Lámina",
+      "category": "mesas",
+      "year": 2020,
+      "description": {"es": "Mesa baja de tablero macizo apoyado sobre dos piezas de vidrio templado. La madera parece flotar.", "en": "Coffee table with a solid top resting on two tempered-glass pieces. The wood seems to float."},
+      "short": {"es": "Mesa baja sobre vidrio", "en": "Coffee table on glass"},
+      "images": ["jo0122-085.jpg", "jo0122-088.jpg"],
+      "sizes": [{"es": "100 × 50 cm", "en": "100 × 50 cm"}, {"es": "120 × 60 cm", "en": "120 × 60 cm"}, {"es": "140 × 70 cm", "en": "140 × 70 cm"}],
+      "height": "38 cm",
+      "weight": "24 kg",
+      "elec": false
+    },
+    {
+      "id": "armario-mesa",
+      "code": "CD-A02",
+      "name": "Caja",
+      "category": "almacenaje",
+      "year": 2020,
+      "description": {"es": "Armario de dos puertas sobre bastidor abierto que hace de mesa auxiliar o entrada.", "en": "Two-door cabinet on an open frame that works as a side table or entrance piece."},
+      "short": {"es": "Armario sobre bastidor", "en": "Cabinet on frame"},
+      "images": ["jo0122-052.jpg", "jo0122-055.jpg"],
+      "sizes": [{"es": "120 × 40 cm", "en": "120 × 40 cm"}, {"es": "140 × 40 cm", "en": "140 × 40 cm"}, {"es": "160 × 45 cm", "en": "160 × 45 cm"}],
+      "height": "150 cm",
+      "weight": "48 kg",
+      "elec": false
+    }
+  ]
+}

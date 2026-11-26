@@ -1,0 +1,93 @@
+---
+import Tile from '@/components/ui/Tile.astro';
+import type { Locale } from '@/i18n/locales';
+import { homeCopy } from './copy';
+
+interface Props { locale: Locale }
+
+const { locale } = Astro.props;
+const { workshop } = homeCopy[locale];
+---
+<section class="home-taller" id="taller">
+  <div class="up eyebrow">{workshop.eyebrow}</div>
+  <h2 class="tl-h">
+    {workshop.heading.map((part) => (part.accent ? <span class="it">{part.text}</span> : part.text))}
+  </h2>
+  <div class="tl-imgs">
+    <div>
+      <Tile src="taller-tablones.jpg" alt={workshop.planksAlt} ratio="4/5"
+        widths={[480, 720, 1000]} sizes="(max-width: 760px) 50vw, 40vw" />
+    </div>
+    <div></div>
+    <div class="b">
+      <Tile src="jo0122-031.jpg" alt={workshop.detailAlt} ratio="4/5"
+        widths={[360, 540, 800]} sizes="(max-width: 760px) 50vw, 24vw" />
+    </div>
+  </div>
+  <div class="tl-strip">
+    {workshop.photos.map((photo) => (
+      <figure>
+        <Tile src={photo.image} alt={photo.caption} ratio="3/2" widths={[400, 640, 900]} sizes="(max-width: 760px) 100vw, 33vw" />
+      </figure>
+    ))}
+  </div>
+</section>
+
+<style>
+  .eyebrow {
+    padding-top: 110px;
+  }
+  .tl-h {
+    font-size: clamp(28px, 3.8vw, 48px);
+    line-height: 1.08;
+    text-transform: uppercase;
+    max-width: 20ch;
+    padding-block: 40px 64px;
+  }
+  @media (min-width: 761px) {
+    .tl-h {
+      max-width: none;
+      white-space: nowrap;
+      font-size: min(2.35vw, 40px);
+    }
+  }
+  .tl-imgs {
+    display: grid;
+    grid-template-columns: 1.25fr 0.5fr 0.75fr;
+    gap: 20px;
+    align-items: start;
+  }
+  .tl-imgs .b {
+    margin-top: 120px;
+    grid-column: 3;
+  }
+  .tl-strip {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+    margin-top: 64px;
+  }
+  .tl-strip figure {
+    margin: 0;
+  }
+  @media (max-width: 760px) {
+    .tl-imgs {
+      grid-template-columns: 1fr 1fr;
+    }
+    .tl-imgs .b {
+      grid-column: 2;
+      margin-top: 60px;
+    }
+    .tl-imgs > div:nth-child(2) {
+      display: none;
+    }
+    .tl-strip {
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-top: 40px;
+    }
+    .tl-strip figure:first-child {
+      grid-column: 1 / -1;
+    }
+  }
+</style>

@@ -1,0 +1,10 @@
+---
+import ProductPage from '@/components/collections/ProductPage.astro';
+import { productPaths } from '@/components/collections/catalog';
+
+export function getStaticPaths() {
+  return productPaths('es');
+}
+const { product } = Astro.props;
+---
+<ProductPage product={product} locale="es" />

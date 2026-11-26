@@ -1,0 +1,21 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import type { PublishedPage } from '@/i18n/pages';
+import type { ProjectsResult } from './data';
+import ProjectsListView from './ProjectsListView.astro';
+import ProjectsStatusView from './ProjectsStatusView.astro';
+
+interface Props {
+  page: PublishedPage;
+  result: ProjectsResult;
+  requestedCategory: string | null;
+}
+
+const { page, result, requestedCategory } = Astro.props;
+const { content } = page;
+---
+<BaseLayout page={page} title={content.title} description={content.description}>
+  {result.ok
+    ? <ProjectsListView page={page} projects={result.projects} requestedCategory={requestedCategory} />
+    : <ProjectsStatusView page={page} kind="unavailable" />}
+</BaseLayout>

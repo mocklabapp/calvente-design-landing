@@ -1,0 +1,13 @@
+---
+import ProjectsListPage from '@/components/projects/ProjectsListPage.astro';
+import { applyNoStore, loadProjects, projectsPage } from '@/components/projects/data';
+
+export const prerender = false;
+
+applyNoStore(Astro.response.headers);
+const page = projectsPage('en');
+if (!page) return new Response('Not found', { status: 404, headers: Astro.response.headers });
+const result = await loadProjects();
+if (!result.ok) Astro.response.status = 503;
+---
+<ProjectsListPage page={page} result={result} requestedCategory={Astro.url.searchParams.get('category')} />

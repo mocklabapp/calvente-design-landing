@@ -1,0 +1,12 @@
+---
+import PageHead from '@/components/ui/PageHead.astro';
+import type { PublishedPage } from '@/i18n/pages';
+import ProductBrowser from './ProductBrowser.astro';
+
+interface Props { page: PublishedPage }
+const { page } = Astro.props;
+---
+<div class="wrap">
+  <PageHead title={page.content.title} intro={page.content.body} />
+  <ProductBrowser locale={page.locale} />
+</div>

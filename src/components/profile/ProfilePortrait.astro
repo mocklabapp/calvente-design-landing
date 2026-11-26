@@ -1,0 +1,42 @@
+---
+// Placeholder portrait ported from the prototype ("FOTO PENDIENTE"), until the client
+// supplies a photo. The prototype's exact fills are not all available as tokens yet:
+// see the `--portrait-*` fallbacks below, which are the only place to update later.
+interface Props {
+  label: string;
+  caption: string;
+}
+
+const { label, caption } = Astro.props;
+---
+<div class="portrait">
+  <svg viewBox="0 0 500 600" width="100%" height="100%" preserveAspectRatio="xMidYMid slice" role="img" aria-label={label}>
+    <rect class="bg" width="500" height="600" />
+    <circle class="skin" cx="250" cy="235" r="92" />
+    <path class="body" d="M90 600c10-130 80-205 160-205s150 75 160 205z" />
+    <path class="hair" d="M160 215c0-70 45-108 92-108s88 38 88 98c-25-30-70-40-110-40-30 0-55 18-70 50z" />
+    <text x="250" y="580" text-anchor="middle">{caption}</text>
+  </svg>
+</div>
+
+<style>
+  .portrait {
+    /* Closest existing tokens; the prototype uses #854628, #E7C9A8, #3A2A1E and #2D2D23. */
+    --portrait-bg: var(--color-portrait-bg);
+    --portrait-skin: var(--color-portrait-skin);
+    --portrait-hair: var(--color-portrait-hair);
+    --portrait-body: var(--color-portrait-body);
+    aspect-ratio: 5 / 6;
+    overflow: hidden;
+    background: var(--portrait-bg);
+  }
+  .bg { fill: var(--portrait-bg); }
+  .skin { fill: var(--portrait-skin); }
+  .body { fill: var(--portrait-body); opacity: 0.82; }
+  .hair { fill: var(--portrait-hair); }
+  text {
+    fill: var(--color-on-photo);
+    font: 500 15px var(--font-mono);
+    letter-spacing: 2px;
+  }
+</style>

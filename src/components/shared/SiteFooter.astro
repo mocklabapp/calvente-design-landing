@@ -1,0 +1,125 @@
+---
+import { site } from '@/config/site';
+import type { PageId } from '@/data/pages';
+import type { Locale } from '@/i18n/locales';
+import { legalItems, sectionItems } from '@/i18n/navigation';
+import { ui } from '@/i18n/ui';
+import Logo from '@/components/ui/Logo.astro';
+
+interface Props {
+  locale: Locale;
+  current?: PageId;
+}
+
+const { locale, current } = Astro.props;
+const labels = ui[locale];
+const { contact } = site;
+---
+<footer class="site wrap">
+  <div>
+    <div class="logo"><Logo width={150} /></div>
+    <p class="blurb">{labels.footer}</p>
+    <p class="contact">
+      {contact.address}<br />
+      <a href={`mailto:${contact.email}`}>{contact.email}</a>{' · '}
+      <a class="tabular-nums" href={contact.phoneHref}>{contact.phone}</a>
+    </p>
+  </div>
+  <nav aria-labelledby="footer-policies">
+    <h2 id="footer-policies">{labels.footerPolicies}</h2>
+    <ul>
+      {legalItems(locale, current).map((item) => (
+        <li><a href={item.href} aria-current={item.current ? 'page' : undefined}>{item.label}</a></li>
+      ))}
+    </ul>
+  </nav>
+  <nav aria-labelledby="footer-links">
+    <h2 id="footer-links">{labels.footerLinks}</h2>
+    <ul>
+      {sectionItems(locale, current).map((item) => (
+        <li><a href={item.href} aria-current={item.current ? 'page' : undefined}>{item.label}</a></li>
+      ))}
+    </ul>
+  </nav>
+  <div>
+    <h2>{labels.footerNewsletter}</h2>
+    <!-- Presentation only: nothing is sent or stored. The input has no name on purpose,
+         so even without JavaScript no value reaches the URL. -->
+    <form class="newsletter" data-toast-submit={labels.toastNewsletter}>
+      <input type="email" autocomplete="email" placeholder={labels.newsletterPlaceholder} aria-label={labels.newsletterPlaceholder} />
+      <button type="submit" aria-label={labels.newsletterSubmit}>⟶</button>
+    </form>
+    <h2>{labels.footerSocial}</h2>
+    <ul>
+      <li><button type="button" data-toast={labels.toastInstagram}>Instagram</button></li>
+      <li><button type="button" data-toast={labels.toastLinkedin}>LinkedIn</button></li>
+    </ul>
+  </div>
+</footer>
+
+<style>
+  .site {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr 1.4fr;
+    gap: 32px;
+    margin-top: 120px;
+    padding-block: 28px 40px;
+    border-top: 1px solid var(--color-line);
+    font-size: 11px;
+  }
+  .logo {
+    margin-bottom: 12px;
+  }
+  .blurb {
+    max-width: 44ch;
+  }
+  .contact {
+    margin-top: 14px;
+  }
+  h2 {
+    margin: 0 0 10px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    font-size: 11px;
+  }
+  ul {
+    display: grid;
+    gap: 4px;
+  }
+  a:hover,
+  button:hover {
+    opacity: 0.7;
+  }
+  .newsletter {
+    display: flex;
+    margin-bottom: 18px;
+    padding-bottom: 4px;
+    border-bottom: 1px solid var(--color-brand);
+  }
+  .newsletter input {
+    flex: 1;
+    min-width: 0;
+    border: 0;
+    outline: 0;
+    background: none;
+    font-size: 11px;
+  }
+  .newsletter input::placeholder {
+    color: var(--color-muted);
+  }
+  .newsletter input:focus-visible {
+    outline: 1.5px solid var(--color-brand);
+    outline-offset: 4px;
+  }
+  @media (max-width: 860px) {
+    .site {
+      grid-template-columns: 1fr 1fr;
+    }
+  }
+  @media (max-width: 520px) {
+    .site {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>
