@@ -1,0 +1,59 @@
+---
+import Tile from '@/components/ui/Tile.astro';
+import type { Locale } from '@/i18n/locales';
+import { ui } from '@/i18n/ui';
+import { homeCopy } from './copy';
+
+interface Props {
+  locale: Locale;
+  projectsHref: string;
+  collectionsHref: string;
+}
+
+const { locale, projectsHref, collectionsHref } = Astro.props;
+const { entry } = homeCopy[locale];
+const cards = [
+  { href: projectsHref, name: ui[locale].nav.projects, sub: entry.projectsSub, image: 'jo0413-004.jpg' },
+  { href: collectionsHref, name: ui[locale].nav.collections, sub: entry.collectionsSub, image: 'jo0361-001.jpg' },
+];
+---
+<div class="duo">
+  {cards.map((card) => (
+    <a href={card.href}>
+      <div class="k"><span>{card.name}</span><span>{card.sub}</span></div>
+      <Tile src={card.image} ratio="4/3" widths={[480, 720, 1000, 1400]} sizes="(max-width: 760px) 100vw, 50vw" />
+    </a>
+  ))}
+</div>
+
+<style>
+  .duo {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 24px;
+    margin-top: 56px;
+  }
+  .k {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 12px;
+    margin: 0 0 10px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--color-brand);
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+  .k span:last-child {
+    font-size: 11px;
+    color: var(--color-muted);
+    text-transform: none;
+    letter-spacing: 0.02em;
+  }
+  @media (max-width: 760px) {
+    .duo {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>
