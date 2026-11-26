@@ -91,28 +91,32 @@ test('a saved theme is applied before first paint and the toggle is wired', () =
   assert.match(html, /data-theme-toggle[^>]*data-label-dark="◑ Oscuro" data-label-light="◐ Claro"/);
 });
 
+// Per-page contract: [path, h1, <title> prefix, intro paragraph | null, meta description fragment].
+// The prototype-faithful profile h1 is the person's name and the contact page has no intro
+// paragraph, so only the shared title/description come from the registry there.
 const registry = [
-  ['colecciones', 'Colecciones', 'Piezas diseñadas y fabricadas por Calvente.'],
-  ['perfil', 'Perfil', 'Colecciones diseñadas y fabricadas por Juanma Calvente'],
-  ['contacto', 'Contacto', 'Datos de contacto del taller de Calvente Design'],
-  ['privacidad', 'Privacidad', 'tratamiento de los datos personales'],
-  ['cookies', 'Cookies', 'uso de cookies en este sitio web.'],
-  ['aviso-legal', 'Aviso legal', 'Información legal sobre el titular'],
-  ['en/collections', 'Collections', 'Pieces designed and made by Calvente.'],
-  ['en/profile', 'Profile', 'Collections designed and made by Seville cabinetmaker'],
-  ['en/contact', 'Contact', 'Contact details for the Calvente Design workshop'],
-  ['en/privacy', 'Privacy', 'how personal data is handled on this website.'],
-  ['en/cookies', 'Cookies', 'use of cookies on this website.'],
-  ['en/legal-notice', 'Legal notice', 'Legal information about the owner'],
+  ['colecciones', 'Colecciones', 'Colecciones', 'Piezas diseñadas y fabricadas por Calvente.', 'Colecciones de mobiliario'],
+  ['perfil', 'Juanma Calvente', 'Perfil', null, 'Perfil de Juanma Calvente'],
+  ['contacto', 'Contacto', 'Contacto', null, 'Contacto del taller de Calvente Design'],
+  ['privacidad', 'Privacidad', 'Privacidad', 'tratamiento de los datos personales', 'Información sobre el tratamiento'],
+  ['cookies', 'Cookies', 'Cookies', 'uso de cookies en este sitio web.', 'cookies'],
+  ['aviso-legal', 'Aviso legal', 'Aviso legal', 'Información legal sobre el titular', 'legal'],
+  ['en/collections', 'Collections', 'Collections', 'Pieces designed and made by Calvente.', 'furniture and lighting collections'],
+  ['en/profile', 'Juanma Calvente', 'Profile', null, 'Profile of Seville cabinetmaker'],
+  ['en/contact', 'Contact', 'Contact', null, 'Contact details for the Calvente Design workshop'],
+  ['en/privacy', 'Privacy', 'Privacy', 'how personal data is handled on this website.', 'personal data'],
+  ['en/cookies', 'Cookies', 'Cookies', 'use of cookies on this website.', 'cookies'],
+  ['en/legal-notice', 'Legal notice', 'Legal notice', 'Legal information about the owner', 'legal'],
 ];
 
-test('every published registry page renders a single h1 with its title and intro', async () => {
-  for (const [path, title, intro] of registry) {
+test('every published registry page renders a single h1, its title and its approved copy', async () => {
+  for (const [path, heading, title, intro, description] of registry) {
     const page = await read(`${path}/index.html`);
     assert.equal(page.match(/<h1\b/g)?.length, 1, path);
-    assert.match(page, new RegExp(`<h1\\b[^>]*>${title}</h1>`), path);
-    assert.match(page, new RegExp(`<p\\b[^>]*>[^<]*${intro}`), path);
+    assert.match(page, new RegExp(`<h1\\b[^>]*>${heading}</h1>`), path);
+    if (intro) assert.match(page, new RegExp(`<p\\b[^>]*>[^<]*${intro}`), path);
     assert.match(page, new RegExp(`<title>${title} \\| ${site.name}</title>`), path);
+    assert.match(page, new RegExp(`name="description" content="[^"]*${description}`, 'i'), path);
   }
 });
 

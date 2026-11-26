@@ -66,7 +66,7 @@ test('default build publishes Spanish at the root and English under /en/', async
   const html = await result.html();
   assert.match(html, /<html lang="es" dir="ltr">/);
   assert.ok(html.includes(`<h1 class="sr-only">${htmlText(site.name)}</h1>`));
-  assert.match(html, /Trabajamos la madera a mano y sin prisa para arquitectos y para ti/);
+  assert.match(html, /Nuestro taller · En Sevilla desde 2005/);
   assert.match(html, /name="description" content="Carpintería de autor\./);
   assert.match(await result.html('en/index.html'), /<html lang="en" dir="ltr">/);
 });
@@ -90,7 +90,7 @@ test('renamed client build preserves opt-in English content, UI and shared ident
   assert.ok(html.includes(`<title>${htmlText(renamedSite)}</title>`));
   assert.ok(html.includes(`<h1 class="sr-only">${htmlText(renamedSite)}</h1>`));
   assert.match(html, /name="description" content="Bespoke joinery\. We make pieces/);
-  assert.match(html, /We work wood by hand, unhurried, for architects and for you/);
+  assert.match(html, /Our workshop · In Seville since 2005/);
   assert.match(html, /<nav class="lang"[^>]*aria-label="Language"/);
   assert.match(html, /href="\/en\/" lang="en" hreflang="en" aria-label="English" aria-current="page"[^>]*>EN</);
   assert.match(html, /href="\/" lang="es" hreflang="es" aria-label="Español"[^>]*>ES</);
