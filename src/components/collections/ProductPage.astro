@@ -1,0 +1,23 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import type { Locale } from '@/i18n/locales';
+import { childAlternates } from '@/i18n/routes';
+import type { Product } from '@/lib/products';
+import { categoryOf, next } from './catalog';
+import NextPiece from './NextPiece.astro';
+import ProductDetail from './ProductDetail.astro';
+
+interface Props {
+  product: Product;
+  locale: Locale;
+}
+const { product, locale } = Astro.props;
+const following = next(product.id);
+---
+<BaseLayout locale={locale} current="collections" alternates={childAlternates('collections', product.id)}
+  title={`${product.name} · ${categoryOf(product).label[locale]}`} description={product.description[locale]}>
+  <div class="wrap">
+    <ProductDetail product={product} locale={locale} />
+    {following && following.id !== product.id && <NextPiece product={following} locale={locale} />}
+  </div>
+</BaseLayout>
