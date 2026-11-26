@@ -1,7 +1,8 @@
 /* Calvente Design palette (approved prototype values, light and dark).
    Raw colors live only in this file. Components consume the semantic
    `--color-*` tokens declared in @theme below. The manual toggle sets
-   `data-theme` on <html>; without it the system preference applies. */
+   `data-theme` on <html>; without it the light #F5EFE4 canvas applies,
+   regardless of the operating system preference (approved default). */
 :root {
   color-scheme: light;
   --cd-bg: #f5efe4;
@@ -38,27 +39,6 @@
   --cd-portrait-skin: #e7c9a8;
   --cd-portrait-hair: #3a2a1e;
   --cd-portrait-body: #2d2d23;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme='light']) {
-    color-scheme: dark;
-    --cd-bg: #1e1b16;
-    --cd-bg2: #29251e;
-    --cd-paper: #25211b;
-    --cd-tile: #2e2a22;
-    --cd-fg: #e38c68;
-    --cd-fg2: #c98564;
-    --cd-ink: #ece4d6;
-    --cd-muted: #aba282;
-    --cd-oak: #c99b63;
-    --cd-line: rgb(227 140 104 / 0.3);
-    --cd-line2: rgb(236 228 214 / 0.14);
-    --cd-ok: #93b176;
-    --cd-warn: #d8a64a;
-    --cd-bad: #e07a68;
-    --cd-info: #86a9c4;
-  }
 }
 
 :root[data-theme='dark'] {

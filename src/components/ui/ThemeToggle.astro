@@ -21,14 +21,12 @@ const labels = ui[Astro.props.locale];
   import { isTheme, parseStoredTheme, prefsStorageKey, serializeTheme, type Theme } from '@/lib/theme';
 
   const root = document.documentElement;
-  const systemDark = window.matchMedia('(prefers-color-scheme: dark)');
   const buttons = document.querySelectorAll<HTMLButtonElement>('[data-theme-toggle]');
 
-  // The head script applies a saved choice before paint; otherwise the system decides.
+  // The head script applies a saved choice before paint; otherwise the site stays light.
   const effectiveTheme = (): Theme => {
     const chosen = root.dataset.theme;
-    if (isTheme(chosen)) return chosen;
-    return systemDark.matches ? 'dark' : 'light';
+    return isTheme(chosen) ? chosen : 'light';
   };
 
   const render = () => {
@@ -64,6 +62,5 @@ const labels = ui[Astro.props.locale];
       render();
     });
   }
-  systemDark.addEventListener('change', render);
   render();
 </script>

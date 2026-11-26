@@ -55,18 +55,16 @@ test('the generated theme exposes semantic tokens instead of a default color pal
   assert.doesNotMatch(css, /--color-(?:red|blue|green)-\d+\s*:/);
 });
 
-test('the approved light and dark palettes are exposed, with dark following the system or the toggle', () => {
+test('the light #F5EFE4 canvas is the default and the dark palette applies only through the toggle', () => {
   const light = { bg: 'f5efe4', bg2: 'ece4d5', paper: 'faf6ee', tile: 'e9e2d5', fg: '8a3517', fg2: 'a4603f', ink: '2d2d23', muted: '7c7458', oak: 'b48954' };
   const dark = { bg: '1e1b16', bg2: '29251e', paper: '25211b', tile: '2e2a22', fg: 'e38c68', fg2: 'c98564', ink: 'ece4d6', muted: 'aba282', oak: 'c99b63' };
-  const [root, ...rest] = css.split(/@media\s*\(prefers-color-scheme:\s*dark\)/);
-  const [system, manual] = rest.join('').split(':root[data-theme=dark]');
-  assert.ok(system && manual, 'dark palette must exist for the system preference and the manual toggle');
-  assert.match(system, /:root:not\(\[data-theme=light\]\)/);
+  // The system preference must never darken the site; only an explicit visitor choice does.
+  assert.doesNotMatch(css, /prefers-color-scheme:\s*dark/);
+  assert.doesNotMatch(html, /prefers-color-scheme/);
+  const [root, manual] = css.split(':root[data-theme=dark]');
+  assert.ok(manual, 'dark palette must exist for the manual toggle');
   for (const [name, value] of Object.entries(light)) assert.match(root, new RegExp(`--cd-${name}:#${value}`));
-  for (const [name, value] of Object.entries(dark)) {
-    assert.match(system, new RegExp(`--cd-${name}:#${value}`));
-    assert.match(manual, new RegExp(`--cd-${name}:#${value}`));
-  }
+  for (const [name, value] of Object.entries(dark)) assert.match(manual, new RegExp(`--cd-${name}:#${value}`));
 });
 
 test('fonts are self-hosted WOFF2 files with swap and no external font request', async () => {
