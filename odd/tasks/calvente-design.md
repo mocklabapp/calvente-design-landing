@@ -17,12 +17,12 @@ Branch `feat/calvente-design`. Client brief: `docs/project-brief.md`.
 
 ## Tasks
 
-- T1 — S1, S2, S3, S9: foundation (tokens, fonts, layout, header, footer, i18n page registry and renderer, EN enabled, assets copied, starter tests adapted). Route: inline. Commit: pending.
-- T2 — S1, S8: Inicio (hero slideshow from projects, two entry cards, Taller block). Route: writer. Commit: pending.
-- T3 — S4, S8: Proyectos listing, category chips and SSR detail with gallery lightbox. Route: writer. Commit: pending.
-- T4 — S5, S8: Colecciones JSON, listing filter and static product detail pages. Route: writer. Commit: pending.
-- T5 — S6, S7: Perfil, Contacto (form) and legal pages. Route: writer. Commit: pending.
-- T6 — S9: verification and browser review. Route: inline/verify. Commit: n/a.
+- T1 — S1, S2, S3, S9: foundation (tokens, fonts, layout, header, footer, i18n page registry and renderer, EN enabled, assets copied, starter tests adapted). Route: worker (context backstop). Commit: 6364895 (large: 83 binary images + fonts + chrome; slice boundary recorded).
+- T2 — S1, S8: Inicio (hero slideshow from projects, two entry cards, Taller block). Route: writer. Commit: a65cb7b.
+- T3 — S4, S8: Proyectos listing, category chips and SSR detail with gallery lightbox. Route: writer. Commit: b812b1e.
+- T4 — S5, S8: Colecciones JSON, listing filter and static product detail pages. Route: writer. Commit: 4df2ba0.
+- T5 — S6, S7: Perfil, Contacto (form) and legal pages. Route: writer. Commit: e3ac515 (+ test alignment c950405).
+- T6 — S9: verification and browser review. Route: inline/verify. Commit: n/a. Evidence: validate 427/427; dev-server routes 200 (unknown project 404); headless Chrome review desktop 1440 + mobile 500 (Chrome headless minimum width), light and dark: home, projects empty state, collections, product, profile, contact. Fixed footer separator spacing.
 
 ## Log
 
