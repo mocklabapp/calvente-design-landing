@@ -1,0 +1,44 @@
+---
+import { pathFor } from '@/i18n/routes';
+import type { Locale } from '@/i18n/locales';
+import type { ProjectsCopy } from './copy';
+
+interface Props {
+  locale: Locale;
+  copy: ProjectsCopy;
+}
+
+const { locale, copy } = Astro.props;
+const collections = pathFor('collections', locale);
+const contact = pathFor('contact', locale);
+---
+<section class="empty" aria-labelledby="projects-empty-title">
+  <h2 id="projects-empty-title">{copy.emptyTitle}</h2>
+  <p>{copy.emptyBody}</p>
+  <p class="links up">
+    {collections && <a class="lnk" href={collections}>{copy.emptyCollections}</a>}
+    {contact && <a class="lnk" href={contact}>{copy.emptyContact}</a>}
+  </p>
+</section>
+
+<style>
+  .empty {
+    display: grid;
+    gap: 16px;
+    justify-items: start;
+    padding-block: 32px 64px;
+    border-top: 1px solid var(--color-line);
+  }
+  h2 {
+    font-size: clamp(22px, 2.6vw, 32px);
+    line-height: 1.1;
+  }
+  p {
+    max-width: 56ch;
+  }
+  .links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px 22px;
+  }
+</style>

@@ -1,0 +1,51 @@
+---
+interface Props {
+  /** Public Supabase Storage URL already validated by the data layer; omit for the empty variant. */
+  src?: string | undefined;
+  alt?: string;
+  /** Text shown by the empty variant. */
+  emptyLabel: string;
+  ratio?: string;
+  loading?: 'lazy' | 'eager';
+}
+
+const { src, alt = '', emptyLabel, ratio, loading = 'lazy' } = Astro.props;
+---
+<!-- A span stays valid inside links and buttons. Remote images have unknown dimensions. -->
+<span class:list={['ph', { empty: src === undefined }]} style={ratio ? `aspect-ratio:${ratio}` : undefined}>
+  {src === undefined ? emptyLabel : (
+    <img src={src} alt={alt} loading={loading} decoding="async" />
+  )}
+</span>
+
+<style>
+  .ph {
+    position: relative;
+    display: block;
+    width: 100%;
+    height: 100%;
+    background: var(--color-tile);
+    overflow: hidden;
+  }
+  .ph img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.6s ease;
+  }
+  :global(a:hover) .ph img,
+  :global(a:focus-visible) .ph img,
+  :global(button:hover) .ph img {
+    transform: scale(1.025);
+  }
+  .empty {
+    display: grid;
+    place-items: center;
+    padding: 12px;
+    color: var(--color-muted);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    text-align: center;
+  }
+</style>

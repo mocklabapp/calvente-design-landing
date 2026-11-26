@@ -1,0 +1,38 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import { alternatesFor, childAlternates } from '@/i18n/routes';
+import type { PublishedPage } from '@/i18n/pages';
+import type { NormalizedPublicProject } from '@/lib/projects';
+import { projectsCopy } from './copy';
+import type { ProjectsResult } from './data';
+import { summarize, toView } from './present';
+import ProjectDetailView from './ProjectDetailView.astro';
+import ProjectsStatusView from './ProjectsStatusView.astro';
+
+interface Props {
+  page: PublishedPage;
+  result: ProjectsResult;
+  /** Undefined when the id matches no project (or the upstream failed). */
+  project: NormalizedPublicProject | undefined;
+}
+
+const { page, result, project } = Astro.props;
+const { locale, content } = page;
+const copy = projectsCopy[locale];
+const projects = result.ok ? result.projects : [];
+const position = project ? projects.indexOf(project) : -1;
+// The next project wraps around; a single project has no successor.
+const next = projects.length > 1 ? projects[(position + 1) % projects.length] : undefined;
+const view = project ? toView(project, locale) : undefined;
+const title = view
+  ? (view.content.title ?? content.title)
+  : (result.ok ? copy.notFoundTitle : copy.unavailableTitle);
+const description = view ? summarize(view.content.description, content.description) : content.description;
+// Equivalents of a real detail page; failures only link back to the listings.
+const alternates = project ? childAlternates('projects', project.id) : alternatesFor('projects');
+---
+<BaseLayout locale={locale} alternates={alternates} current="projects" title={title} description={description}>
+  {project
+    ? <ProjectDetailView page={page} project={project} next={next} />
+    : <ProjectsStatusView page={page} kind={result.ok ? 'notFound' : 'unavailable'} />}
+</BaseLayout>

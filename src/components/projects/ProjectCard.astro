@@ -1,0 +1,54 @@
+---
+import { childPath } from '@/i18n/routes';
+import type { Locale } from '@/i18n/locales';
+import type { ProjectsCopy } from './copy';
+import { pad, type ProjectView } from './present';
+import ProjectPhoto from './ProjectPhoto.astro';
+
+interface Props {
+  locale: Locale;
+  copy: ProjectsCopy;
+  view: ProjectView;
+  /** One-based position in the filtered register. */
+  position: number;
+}
+
+const { locale, copy, view, position } = Astro.props;
+const { project, content, categoryLabel } = view;
+const title = content.title ?? copy.missingText;
+---
+<a href={childPath('projects', locale, project.id)} data-content-source={content.source}>
+  <div class="n num">{pad(position)}</div>
+  <ProjectPhoto src={project.images[0]?.url} emptyLabel={copy.noImages} ratio="5/6" />
+  <div class="dash">—</div>
+  <div class="m">
+    <span>{title}</span>
+    <span>{project.year ?? copy.noDate}</span>
+    {categoryLabel && <span class="mut">{categoryLabel}</span>}
+  </div>
+</a>
+
+<style>
+  .n {
+    font-size: 11px;
+    margin-bottom: 8px;
+    font-variant-numeric: tabular-nums;
+  }
+  .dash {
+    margin-top: 8px;
+  }
+  .m {
+    margin-top: 14px;
+    padding-top: 8px;
+    border-top: 1px solid var(--color-line);
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 2px 10px;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+  .mut {
+    color: var(--color-muted);
+  }
+</style>

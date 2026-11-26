@@ -1,0 +1,64 @@
+---
+import PageHead from '@/components/ui/PageHead.astro';
+import type { PublishedPage } from '@/i18n/pages';
+import type { NormalizedPublicProject } from '@/lib/projects';
+import { projectsCopy } from './copy';
+import { activeCategory, presentCategories, toView } from './present';
+import CategoryFilter from './CategoryFilter.astro';
+import ProjectCard from './ProjectCard.astro';
+import ProjectsEmpty from './ProjectsEmpty.astro';
+import RegisterFooter from './RegisterFooter.astro';
+import RegisterHeader from './RegisterHeader.astro';
+
+interface Props {
+  page: PublishedPage;
+  projects: NormalizedPublicProject[];
+  /** Raw `category` query value; only categories used by a project are honored. */
+  requestedCategory: string | null;
+}
+
+const { page, projects, requestedCategory } = Astro.props;
+const { locale, content, path } = page;
+const copy = projectsCopy[locale];
+const active = activeCategory(requestedCategory, projects);
+const visible = projects.filter((project) => active === null || project.category === active);
+const views = visible.map((project) => toView(project, locale));
+const works = visible.length === 1 ? copy.worksOne : copy.worksMany;
+---
+<div class="wrap">
+  <PageHead title={content.title} intro={content.body} />
+  {projects.length === 0 ? <ProjectsEmpty locale={locale} copy={copy} /> : (
+    <>
+      <CategoryFilter locale={locale} copy={copy} basePath={path} active={active}
+        categories={presentCategories(projects)} shown={visible.length} />
+      <RegisterHeader copy={copy} count={visible.length} worksLabel={works} />
+      <div class="gB">
+        {views.map((view, index) => (
+          <ProjectCard locale={locale} copy={copy} view={view} position={index + 1} />
+        ))}
+      </div>
+      <RegisterFooter copy={copy} count={visible.length} />
+    </>
+  )}
+</div>
+
+<style>
+  .gB {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 56px 40px;
+    padding-inline: 4%;
+  }
+  @media (max-width: 860px) {
+    .gB {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 40px 16px;
+      padding-inline: 0;
+    }
+  }
+  @media (max-width: 520px) {
+    .gB {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

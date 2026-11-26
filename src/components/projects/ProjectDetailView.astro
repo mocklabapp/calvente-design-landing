@@ -1,0 +1,94 @@
+---
+import type { PublishedPage } from '@/i18n/pages';
+import type { NormalizedPublicProject } from '@/lib/projects';
+import { projectsCopy } from './copy';
+import { paragraphs, toView } from './present';
+import NextProject from './NextProject.astro';
+import ProjectGallery from './ProjectGallery.astro';
+import ProjectSpec from './ProjectSpec.astro';
+
+interface Props {
+  /** Registry page of the projects listing in the current locale. */
+  page: PublishedPage;
+  project: NormalizedPublicProject;
+  next: NormalizedPublicProject | undefined;
+}
+
+const { page, project, next } = Astro.props;
+const { locale } = page;
+const copy = projectsCopy[locale];
+const view = toView(project, locale);
+const { content, categoryLabel } = view;
+const memo = paragraphs(content.description);
+const title = content.title ?? copy.missingText;
+const hasSpec = categoryLabel !== null || project.year !== null || project.weblink !== null;
+---
+<article class="wrap" data-content-source={content.source}>
+  <div class="back"><a class="up" href={page.path}>⟵ {copy.backToProjects}</a></div>
+  <div class="sh">
+    <span>{categoryLabel}</span>
+    <h1 class="c">{title}</h1>
+    <span class="r">{project.year ?? copy.noDate}</span>
+  </div>
+  <ProjectGallery copy={copy} title={title} images={project.images} />
+  <div class:list={['pd-txt', { solo: !hasSpec }]}>
+    {hasSpec && <ProjectSpec copy={copy} view={view} />}
+    <div class="memo">
+      {content.source === 'missing'
+        ? <p>{copy.missingText}</p>
+        : memo.map((text) => <p>{text}</p>)}
+    </div>
+  </div>
+  {next && <NextProject locale={locale} copy={copy} view={toView(next, locale)} />}
+</article>
+
+<style>
+  .back {
+    padding-block: 28px;
+  }
+  .back a {
+    font-size: 11px;
+  }
+  .sh {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    gap: 16px;
+    border-bottom: 1px solid var(--color-ink);
+    padding-bottom: 6px;
+    margin-bottom: 22px;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+  .sh .c {
+    font-size: 15px;
+    font-weight: 500;
+    letter-spacing: 0.03em;
+    text-align: center;
+  }
+  .sh .r {
+    text-align: right;
+  }
+  .pd-txt {
+    display: grid;
+    grid-template-columns: 1fr 1.3fr;
+    gap: 64px;
+    margin-top: 56px;
+  }
+  .pd-txt.solo {
+    grid-template-columns: 1fr;
+  }
+  .memo {
+    font-size: 13.5px;
+    max-width: 64ch;
+    display: grid;
+    gap: 14px;
+    align-content: start;
+  }
+  @media (max-width: 860px) {
+    .pd-txt {
+      grid-template-columns: 1fr;
+      gap: 28px;
+    }
+  }
+</style>

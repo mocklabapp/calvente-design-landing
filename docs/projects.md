@@ -2,6 +2,12 @@
 
 base-landing-mocklab provides a server-only `getProjects()` function and a dynamic public `GET /api/projects.json` endpoint for the configured Supabase owner. Native Astro frontmatter is the reusable alternative to a React hook; no React or Supabase SDK is needed. This integration supplies data, not a portfolio design.
 
+## This client's real routes (Calvente Design)
+
+This client already composes the portfolio; do not copy the example below into new routes. The on-demand routes are `src/pages/proyectos/index.astro`, `src/pages/proyectos/[id].astro`, `src/pages/en/projects/index.astro` and `src/pages/en/projects/[id].astro`. They stay thin: `prerender = false`, the three no-store headers on every response, `getProjects()` through `loadProjects()`, the registry page `projects` for the locale, a sanitized 503 view on upstream failure and a 404 view with the same headers for an unknown id. `[...path].astro` excludes the `projects` page, so every other page remains static.
+
+Shared views live in `src/components/projects/` with their own typed es/en copy (`copy.ts`). The listing filters by category with plain links (`?category=<stored id>`, applied server-side and ignored unless a project uses it). Text comes from `selectProjectContent()` without fallback, so a project without text in the page language shows the explicit missing state (`data-content-source="missing"`). With no projects the listing shows an empty state. Detail pages show only DTO fields; the gallery uses plain `<img>` with the validated Supabase URLs and a small lightbox script, and `weblink` becomes a link only when it is an absolute http(s) URL. `tests/projects-pages.test.mjs` builds an isolated copy of the site and drives the built handler with fixture responses.
+
 ## Configure one portfolio
 
 1. Only for live projects, copy the canonical blank [`.env.example`](../.env.example) to `.env` in the project root yourself (`cp .env.example .env`). Fill the shared public Edge URL and owner UUID locally. Keep the reusable example empty; the site needs no API key or database credential. Both values are read through the server-only environment boundary.
