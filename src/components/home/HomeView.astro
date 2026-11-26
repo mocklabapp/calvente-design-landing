@@ -1,0 +1,12 @@
+---
+// Stub until the home sections land: the real hero, entry cards and workshop block replace it.
+import { site } from '@/config/site';
+import type { PublishedPage } from '@/i18n/pages';
+
+interface Props { page: PublishedPage }
+const { page } = Astro.props;
+---
+<div class="wrap">
+  <h1 class="sr-only">{site.name}</h1>
+  <p class="pt-14">{page.content.body}</p>
+</div>

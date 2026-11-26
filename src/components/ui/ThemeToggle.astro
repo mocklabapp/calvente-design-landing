@@ -1,0 +1,69 @@
+---
+import type { Locale } from '@/i18n/locales';
+import { ui } from '@/i18n/ui';
+
+interface Props {
+  locale: Locale;
+}
+
+const labels = ui[Astro.props.locale];
+---
+<button
+  type="button"
+  class="theme"
+  data-theme-toggle
+  data-label-dark={labels.themeToDark}
+  data-label-light={labels.themeToLight}
+  aria-pressed="false"
+>{labels.themeToDark}</button>
+
+<script>
+  import { isTheme, parseStoredTheme, prefsStorageKey, serializeTheme, type Theme } from '@/lib/theme';
+
+  const root = document.documentElement;
+  const systemDark = window.matchMedia('(prefers-color-scheme: dark)');
+  const buttons = document.querySelectorAll<HTMLButtonElement>('[data-theme-toggle]');
+
+  // The head script applies a saved choice before paint; otherwise the system decides.
+  const effectiveTheme = (): Theme => {
+    const chosen = root.dataset.theme;
+    if (isTheme(chosen)) return chosen;
+    return systemDark.matches ? 'dark' : 'light';
+  };
+
+  const render = () => {
+    const dark = effectiveTheme() === 'dark';
+    for (const button of buttons) {
+      // The label names the theme the button switches to.
+      button.textContent = (dark ? button.dataset.labelLight : button.dataset.labelDark) ?? '';
+      button.setAttribute('aria-pressed', String(dark));
+    }
+  };
+
+  const save = (theme: Theme) => {
+    try {
+      localStorage.setItem(prefsStorageKey, serializeTheme(localStorage.getItem(prefsStorageKey), theme));
+    } catch {
+      // Storage can be unavailable (private mode); the choice then lasts for this page only.
+    }
+  };
+
+  // Keep the head script and this module agreeing on what was saved.
+  try {
+    const saved = parseStoredTheme(localStorage.getItem(prefsStorageKey));
+    if (saved) root.dataset.theme = saved;
+  } catch {
+    // Ignore unavailable storage.
+  }
+
+  for (const button of buttons) {
+    button.addEventListener('click', () => {
+      const next: Theme = effectiveTheme() === 'dark' ? 'light' : 'dark';
+      root.dataset.theme = next;
+      save(next);
+      render();
+    });
+  }
+  systemDark.addEventListener('change', render);
+  render();
+</script>

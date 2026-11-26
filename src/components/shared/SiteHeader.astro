@@ -1,0 +1,107 @@
+---
+import type { PageId } from '@/data/pages';
+import type { Locale } from '@/i18n/locales';
+import { homeHref, sectionItems } from '@/i18n/navigation';
+import type { Alternate } from '@/i18n/routes';
+import { ui } from '@/i18n/ui';
+import LanguageToggle from '@/components/ui/LanguageToggle.astro';
+import Logo from '@/components/ui/Logo.astro';
+
+interface Props {
+  locale: Locale;
+  current?: PageId;
+  alternates: Alternate[];
+}
+
+const { locale, current, alternates } = Astro.props;
+const labels = ui[locale];
+const items = sectionItems(locale, current);
+// Two link columns, as in the approved menu: the first two sections, then the rest.
+const columns = [items.slice(0, 2), items.slice(2)];
+---
+<header class="menu wrap">
+  <div class="brand">
+    <a href={homeHref(locale)} aria-label={labels.homeLink}><Logo width={150} /></a>
+    <div class="tagline">{labels.taglineLine1}<br />{labels.taglineLine2}</div>
+  </div>
+  <nav class="sections" aria-label={labels.mainNavigation}>
+    {columns.map((column) => (
+      <ul>
+        {column.map((item) => (
+          <li>
+            <a href={item.href} aria-current={item.current ? 'page' : undefined}>{item.label}</a>
+          </li>
+        ))}
+      </ul>
+    ))}
+  </nav>
+  <div class="aside">
+    {labels.place}<br />
+    <LanguageToggle locale={locale} alternates={alternates} />
+  </div>
+</header>
+
+<style>
+  .menu {
+    position: sticky;
+    top: env(safe-area-inset-top, 0px);
+    z-index: 20;
+    display: grid;
+    grid-template-columns: 1.3fr 1fr 1fr 1fr;
+    gap: 28px;
+    padding-block: 26px 18px;
+    background: var(--color-canvas);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    line-height: 1.7;
+  }
+  .sections {
+    grid-column: span 2;
+    display: grid;
+    grid-template-columns: subgrid;
+  }
+  .sections ul,
+  .aside {
+    min-width: 0;
+    padding-top: 8px;
+    border-top: 1px solid var(--color-line);
+  }
+  .brand {
+    min-width: 0;
+  }
+  .tagline {
+    margin-top: 8px;
+  }
+  .sections a {
+    display: block;
+  }
+  .sections a[aria-current='page']::before {
+    content: '→ ';
+  }
+  .sections a:hover {
+    opacity: 0.7;
+  }
+  .aside {
+    text-align: right;
+  }
+  @media (max-width: 860px) {
+    .menu {
+      position: static;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px 20px;
+    }
+    .brand {
+      grid-column: 1 / -1;
+    }
+    .aside {
+      text-align: left;
+    }
+  }
+  /* The mobile header replaces this menu. */
+  @media (max-width: 760px) {
+    .menu {
+      display: none;
+    }
+  }
+</style>

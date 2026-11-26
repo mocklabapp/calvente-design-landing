@@ -7,7 +7,8 @@ export const locales = {
 export type Locale = keyof typeof locales;
 export const defaultLocale = 'es' satisfies Locale;
 // Spanish is mandatory; other registered languages are opt-in per client.
-export const enabledLocales: readonly string[] = ['es'];
+// Calvente Design publishes Spanish and English.
+export const enabledLocales: readonly string[] = ['es', 'en'];
 
 export function getEnabledLocales(): Locale[] {
   if (!enabledLocales.includes(defaultLocale)) {

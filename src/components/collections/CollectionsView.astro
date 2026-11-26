@@ -1,0 +1,11 @@
+---
+// Stub until this view's content lands: it renders the page head only.
+import PageHead from '@/components/ui/PageHead.astro';
+import type { PublishedPage } from '@/i18n/pages';
+
+interface Props { page: PublishedPage }
+const { page } = Astro.props;
+---
+<div class="wrap">
+  <PageHead title={page.content.title} intro={page.content.body} />
+</div>

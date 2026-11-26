@@ -3,8 +3,9 @@ import PageRenderer from './index.astro';
 import { publishedPages, type PublishedPage } from '@/i18n/pages';
 
 export function getStaticPaths() {
-  // index.astro owns /; every other enabled, complete translation is generated here.
-  return publishedPages().filter(({ path }) => path !== '/').map((page) => ({
+  // index.astro owns /. The projects listing is rendered on demand by its own routes,
+  // so it is excluded here; every other enabled, complete translation is generated.
+  return publishedPages().filter(({ id, path }) => path !== '/' && id !== 'projects').map((page) => ({
     params: { path: page.path.slice(1, -1) },
     props: { page },
   }));

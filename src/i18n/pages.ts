@@ -1,22 +1,43 @@
-import { pages, type Page, type PageTranslation } from '../data/pages';
+import { pages, type Page, type PageId, type PageTranslation } from '../data/pages';
 import { defaultLocale, getEnabledLocales, locales, type Locale } from './locales';
 import { ui } from './ui';
 
 export interface PublishedPage {
-  id: string;
+  id: PageId;
   locale: Locale;
   content: PageTranslation;
   path: string;
 }
 
+/** Paths of every string leaf in a UI dictionary, e.g. `nav.home` or `menu`. */
+function leafPaths(value: unknown, prefix = ''): string[] {
+  if (typeof value !== 'object' || value === null) return [prefix];
+  return Object.entries(value).flatMap(([key, child]) =>
+    leafPaths(child, prefix ? `${prefix}.${key}` : key));
+}
+
+function leafAt(value: unknown, path: string): unknown {
+  return path.split('.').reduce<unknown>((node, key) =>
+    typeof node === 'object' && node !== null ? (node as Record<string, unknown>)[key] : undefined, value);
+}
+
+// Every enabled locale must supply a non-empty string for every UI key that the
+// default (Spanish) dictionary defines; nothing falls back to Spanish silently.
+function assertCompleteUi(enabled: Locale[]): void {
+  const keys = leafPaths(ui[defaultLocale]);
+  for (const locale of enabled) {
+    const dictionary: unknown = ui[locale];
+    const complete = typeof dictionary === 'object' && dictionary !== null && keys.every((key) => {
+      const text = leafAt(dictionary, key);
+      return typeof text === 'string' && text.trim() !== '';
+    });
+    if (!complete) throw new Error(`[i18n] Incomplete UI for ${locale}.`);
+  }
+}
+
 export function publishedPages(): PublishedPage[] {
   const enabled = getEnabledLocales();
-  for (const locale of enabled) {
-    const dictionary = ui[locale];
-    if (!dictionary?.navigation?.trim() || !dictionary?.languageSwitcher?.trim()) {
-      throw new Error(`[i18n] Incomplete UI for ${locale}.`);
-    }
-  }
+  assertCompleteUi(enabled);
   const ids = new Set<string>();
   for (const page of pages) {
     if (ids.has(page.id)) {
