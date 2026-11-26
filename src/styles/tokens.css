@@ -33,6 +33,11 @@
   --cd-on-lightbox-control: #2d2d23;
   --cd-lightbox-shadow: rgb(0 0 0 / 0.35);
   --cd-toast-shadow: rgb(0 0 0 / 0.2);
+  /* Placeholder portrait ("FOTO PENDIENTE") until the client supplies a photo. */
+  --cd-portrait-bg: #854628;
+  --cd-portrait-skin: #e7c9a8;
+  --cd-portrait-hair: #3a2a1e;
+  --cd-portrait-body: #2d2d23;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -120,6 +125,10 @@
   --color-on-lightbox-control: var(--cd-on-lightbox-control);
   --color-lightbox-shadow: var(--cd-lightbox-shadow);
   --color-toast-shadow: var(--cd-toast-shadow);
+  --color-portrait-bg: var(--cd-portrait-bg);
+  --color-portrait-skin: var(--cd-portrait-skin);
+  --color-portrait-hair: var(--cd-portrait-hair);
+  --color-portrait-body: var(--cd-portrait-body);
 
   /* Typography roles: mono body, sans UI, serif accents, logo face. */
   --font-mono: 'IBM Plex Mono', ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace;

@@ -1,0 +1,96 @@
+---
+import type { Locale } from '@/i18n/locales';
+import { contactCopy } from './copy';
+
+interface Props { locale: Locale }
+const { locale } = Astro.props;
+const copy = contactCopy[locale];
+---
+<!-- Presentation only (S6): no action, provider or storage. The fields have no name on
+     purpose, so even without JavaScript no value reaches the URL. The shared toast
+     handles the submit (it cancels it); the script below only clears the fields. -->
+<form class="form" data-contact-form data-toast-submit={copy.toast}>
+  <div class="row">
+    <div class="fld">
+      <label for="contact-name">{copy.name} *</label>
+      <input id="contact-name" autocomplete="name" required />
+    </div>
+    <div class="fld">
+      <label for="contact-email">Email *</label>
+      <input id="contact-email" type="email" autocomplete="email" required />
+    </div>
+  </div>
+  <div class="row">
+    <div class="fld">
+      <label for="contact-studio">{copy.studio}</label>
+      <input id="contact-studio" autocomplete="organization" />
+    </div>
+    <div class="fld">
+      <label for="contact-subject">{copy.subject}</label>
+      <select id="contact-subject">
+        {copy.subjects.map((subject) => <option>{subject}</option>)}
+      </select>
+    </div>
+  </div>
+  <div class="fld">
+    <label for="contact-message">{copy.message} *</label>
+    <textarea id="contact-message" rows="5" required></textarea>
+  </div>
+  <button type="submit" class="btn btn-solid send">{copy.send}</button>
+</form>
+
+<style>
+  .form {
+    display: grid;
+    gap: 18px;
+  }
+  .row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 18px;
+  }
+  .fld {
+    display: grid;
+    gap: 4px;
+  }
+  label {
+    font-size: 10.5px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+  input,
+  textarea,
+  select {
+    background: transparent;
+    border: 0;
+    border-bottom: 1px solid var(--color-line);
+    padding: 7px 0;
+    outline: 0;
+    font-size: 13px;
+    color: var(--color-brand);
+  }
+  input:focus-visible,
+  textarea:focus-visible,
+  select:focus-visible {
+    border-color: var(--color-brand);
+  }
+  option {
+    background: var(--color-canvas);
+    color: var(--color-ink);
+  }
+  .send {
+    justify-self: start;
+  }
+  @media (max-width: 520px) {
+    .row {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>
+
+<script>
+  // Runs after submit validation has passed (native required/email stay in force).
+  for (const form of document.querySelectorAll<HTMLFormElement>('form[data-contact-form]')) {
+    form.addEventListener('submit', () => form.reset());
+  }
+</script>
